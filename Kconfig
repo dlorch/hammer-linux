@@ -1,0 +1,6 @@
+config HAMMER_FS
+	tristate "HAMMER Filesystem (EXPERIMENTAL)"
+	help
+		HAMMER Filesystem
+
+		If afraid, say N.
