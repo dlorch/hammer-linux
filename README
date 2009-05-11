@@ -2,7 +2,5 @@ HAMMER Filesystem port to Linux
 
 Conventions:
 - Linux-specific functions prefixed with 'hammerfs_'
-- DragonFly BSD files copied verbatim to dfly/, changed as little as possible:
-  -> #if 0 to comment out conflicting blocks/definitions
-  -> blank .h files
+- DragonFly BSD files copied verbatim to dfly/
 - wrapper definitions in dfly_wrap.[ch]
