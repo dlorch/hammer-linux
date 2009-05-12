@@ -61,6 +61,10 @@ struct thread {
 };
 typedef struct thread *thread_t;
 
+extern int  lwkt_create (void (*func)(void *), void *, struct thread **,
+                         struct thread *, int, int, const char *, ...);
+extern void lwkt_exit (void);
+
 // from platform/pc32/include/thread.h
 #define curthread   ((thread_t)NULL)
 
@@ -254,6 +258,9 @@ int __cursig(struct lwp *, int, int);
 
 // from sys/buf.h
 extern int      hidirtybufspace;
+
+// from sys/kernel.h
+extern int hz;                          /* system clock's frequency */
 
 /*
  * conflicting Linux definitions

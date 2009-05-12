@@ -152,3 +152,18 @@ int __cursig(struct lwp *lp, int mayblock, int maytrace) {
     return 0;
 }
 
+// from kern/lwkt_thread.c
+int lwkt_create(void (*func)(void *), void *arg,
+    struct thread **tdp, thread_t template, int tdflags, int cpu,
+    const char *fmt, ...)
+{
+    panic("lwkt_create");
+    return 0;
+}
+
+void lwkt_exit(void) {
+    panic("lwkt_exit");
+}
+
+// from kern/subr_param.c
+int hz;
