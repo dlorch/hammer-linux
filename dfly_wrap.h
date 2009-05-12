@@ -106,6 +106,7 @@ void brelse (struct buf *);
 struct buf_rb_tree {
     void    *rbh_root;
 };
+int     bd_heatup (void);
 
 // from sys/mount.h
 #define MNT_RDONLY      0x00000001      /* read only Filesystem */
@@ -271,6 +272,9 @@ extern int      hidirtybufspace;
 
 // from sys/kernel.h
 extern int hz;                          /* system clock's frequency */
+
+// from sys/iosched.h
+void bwillwrite(int bytes);
 
 /*
  * conflicting Linux definitions

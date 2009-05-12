@@ -1,7 +1,6 @@
 hammer_inode.c
 hammer_io.c
 hammer_ioctl.c
-hammer_reblock.c
 hammer_recover.c
 hammer_subs.c
 hammer_vfsops.c

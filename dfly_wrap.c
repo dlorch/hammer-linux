@@ -111,6 +111,11 @@ void brelse(struct buf *bp) {
     panic("brelse");
 }
 
+int bd_heatup (void) {
+    panic("bd_heatup");
+    return 0;
+}
+
 // from ??
 void bzero (volatile void *buf, size_t len) {
     panic("bzero");
@@ -180,3 +185,8 @@ void lwkt_exit(void) {
 
 // from kern/subr_param.c
 int hz;
+
+// from kern/kern_iosched.c
+void bwillwrite(int bytes) {
+    panic("bwillwrite");
+}
