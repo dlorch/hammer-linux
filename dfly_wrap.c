@@ -77,6 +77,7 @@ void brelse(struct buf *bp) {}
 
 // from ??
 void bzero (volatile void *buf, size_t len) {}
+void bcopy (volatile const void *from, volatile void *to, size_t len) {}
 
 // from kern/vfs_mount.c
 int vmntvnodescan(

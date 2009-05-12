@@ -206,6 +206,8 @@ void nlookup_done(struct nlookupdata *);
 #define kprintf printk
 void Debugger (const char *msg);
 void bzero (volatile void *buf, size_t len);
+void bcopy (volatile const void *from, volatile void *to, size_t len);
+uint32_t crc32(const void *buf, size_t size);
 
 // from kern/vfs_subr.c
 #define KERN_MAXVNODES           5      /* int: max vnodes */

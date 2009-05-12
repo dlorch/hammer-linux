@@ -1,6 +1,6 @@
 obj-$(CONFIG_HAMMER_FS) += hammer.o
 
-hammer-objs := file.o super.o dfly_wrap.o hammer_ondisk.o
+hammer-objs := file.o super.o dfly_wrap.o hammer_ondisk.o hammer_undo.o
 
 ifndef EXTRA_CFLAGS
 	export EXTRA_CFLAGS = -I$(shell pwd)/fs/hammerfs/dfly
