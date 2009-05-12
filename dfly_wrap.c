@@ -89,6 +89,8 @@ int bcmp(const void *b1, const void *b2, size_t length) {
 }
 
 // from kern/vfs_bio.c
+int hidirtybufspace;
+
 int bread(struct vnode *vp, off_t loffset, int size, struct buf **bpp) {
     panic("bread");
     return 0;
@@ -149,3 +151,4 @@ int __cursig(struct lwp *lp, int mayblock, int maytrace) {
     panic("__cursig");
     return 0;
 }
+

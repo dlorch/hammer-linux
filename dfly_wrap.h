@@ -251,6 +251,9 @@ int bcmp (const void *, const void *, size_t);
 #define CURSIG(lp)              __cursig(lp, 1, 0)
 int __cursig(struct lwp *, int, int);
 
+// from sys/buf.h
+extern int      hidirtybufspace;
+
 /*
  * conflicting Linux definitions
  */
