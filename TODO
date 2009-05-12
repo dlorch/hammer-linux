@@ -1,5 +1,4 @@
 hammer_blockmap.c
-hammer_btree.c
 hammer_cursor.c
 hammer_flusher.c
 hammer_freemap.c

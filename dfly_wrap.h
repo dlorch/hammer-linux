@@ -56,6 +56,9 @@ void *dfly_kmalloc (unsigned long size, struct malloc_type *type, int flags);
 struct thread {};
 typedef struct thread *thread_t;
 
+// from platform/pc32/include/thread.h
+#define curthread   NULL
+
 // from sys/types.h
 typedef u_int32_t udev_t;         /* device number */
 typedef uint64_t u_quad_t;        /* quads */
