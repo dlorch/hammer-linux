@@ -157,7 +157,10 @@ int count_udev (int x, int y);
 #define v_uminor        v_un.vu_cdev.vu_uminor
 #define v_rdev          v_un.vu_cdev.vu_cdevinfo
 
+#define VINACTIVE       0x04000 /* The vnode is inactive (did VOP_INACTIVE) */
+
 struct vnode {
+    int     v_flag;                         /* vnode flags (see below) */
     void    *v_data;                        /* private data for fs */
     struct  buf_rb_tree v_rbdirty_tree;     /* RB tree of dirty bufs */
     enum    vtype v_type;                   /* vnode type */
@@ -208,6 +211,8 @@ void Debugger (const char *msg);
 void bzero (volatile void *buf, size_t len);
 void bcopy (volatile const void *from, volatile void *to, size_t len);
 uint32_t crc32(const void *buf, size_t size);
+int tsleep (void *, int, const char *, int);
+void wakeup (void *chan);
 
 // from kern/vfs_subr.c
 #define KERN_MAXVNODES           5      /* int: max vnodes */
@@ -222,12 +227,15 @@ extern int desiredvnodes;
 #define FREAD           0x0001
 #define FWRITE          0x0002
 
-// sys/lock.h
+// from sys/lock.h
 #define LK_EXCLUSIVE    0x00000002      /* exclusive lock */
 #define LK_RETRY        0x00020000 /* vn_lock: retry until locked */
 
-// sys/libkern.h
+// from sys/libkern.h
 int bcmp (const void *, const void *, size_t);
+
+// from cpu/i386/include/param.h
+#define MAXPHYS         (128 * 1024)    /* max raw I/O transfer size */
 
 /*
  * conflicting Linux definitions

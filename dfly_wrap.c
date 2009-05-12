@@ -96,3 +96,10 @@ void dfly_kfree(void *ptr, struct malloc_type *type) {}
 void *dfly_kmalloc(unsigned long size, struct malloc_type *type, int flags) {
     return 0;
 }
+
+// from kern/kern_synch.c
+int tsleep(void *ident, int flags, const char *wmesg, int timo) {
+    return EWOULDBLOCK;
+}
+
+void wakeup(void *ident) {}
