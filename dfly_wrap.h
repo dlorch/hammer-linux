@@ -33,7 +33,8 @@
 #define S_IFDB	0110000		/* record access file */
 
 // from sys/malloc.h
-#define MALLOC_DECLARE(type)
+#define MALLOC_DECLARE(type) \
+    extern struct malloc_type type[1]
 #define M_WAITOK        0x0002  /* wait for resources / alloc from cache */
 #define M_ZERO          0x0100  /* bzero() the allocation */
 #define M_USE_RESERVE   0x0200  /* can eat into free list reserve */
@@ -42,6 +43,8 @@
 #define kmalloc(size, type, flags) dfly_kmalloc(size, type, flags)
 
 struct malloc_type {};
+
+MALLOC_DECLARE(M_TEMP);
 
 void dfly_kfree (void *addr, struct malloc_type *type);
 void *dfly_kmalloc (unsigned long size, struct malloc_type *type, int flags);
