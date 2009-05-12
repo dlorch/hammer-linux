@@ -138,3 +138,8 @@ int tsleep(void *ident, int flags, const char *wmesg, int timo) {
 void wakeup(void *ident) {
     panic("wakeup");
 }
+
+// from kern/clock.c
+void getmicrotime(struct timeval *tvp) {
+    panic("getmicrotime");
+}

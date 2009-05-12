@@ -73,6 +73,8 @@ struct krate {
     int count;
 };
 
+void getmicrotime (struct timeval *tv);
+
 // from sys/statvfs.h
 struct statvfs {
     long    f_blocks;               /* total data blocks in file system */

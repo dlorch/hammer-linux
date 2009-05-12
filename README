@@ -1,5 +1,8 @@
 HAMMER Filesystem port to Linux
 
+Installation:
+# make && insmod hammer.ko
+
 Conventions:
 - Linux-specific functions prefixed with 'hammerfs_'
 - DragonFly BSD files copied verbatim to dfly/
