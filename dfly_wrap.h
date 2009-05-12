@@ -75,6 +75,8 @@ typedef uint64_t u_quad_t;        /* quads */
 // from sys/param.h
 #define MAXBSIZE        65536   /* must be power of 2 */
 
+#define PCATCH          0x00000100      /* tsleep checks signals */
+
 // from sys/time.h
 struct krate {
     int freq;
@@ -228,6 +230,8 @@ void bcopy (volatile const void *from, volatile void *to, size_t len);
 uint32_t crc32(const void *buf, size_t size);
 int tsleep (void *, int, const char *, int);
 void wakeup (void *chan);
+int copyin (const void *udaddr, void *kaddr, size_t len);
+int copyout (const void *kaddr, void *udaddr, size_t len);
 
 // from kern/vfs_subr.c
 #define KERN_MAXVNODES           5      /* int: max vnodes */

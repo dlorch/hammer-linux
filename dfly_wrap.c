@@ -82,6 +82,17 @@ void Debugger (const char *msg) {
     panic("Debugger");
 }
 
+// from platform/*/platform/copyio.c
+int copyout(const void *kaddr, void *udaddr, size_t len) {
+    panic("copyout");
+    return 0;
+}
+
+int copyin(const void *udaddr, void *kaddr, size_t len) {
+    panic("copyin");
+    return 0;
+}
+
 // from libkern/bcmp.c
 int bcmp(const void *b1, const void *b2, size_t length) {
     panic("bcmp");

@@ -2,7 +2,6 @@ hammer_inode.c
 hammer_io.c
 hammer_ioctl.c
 hammer_mirror.c
-hammer_pfs.c
 hammer_prune.c
 hammer_reblock.c
 hammer_recover.c
