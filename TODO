@@ -1,6 +1,5 @@
 hammer_inode.c
 hammer_io.c
-hammer_ioctl.c
 hammer_subs.c
 hammer_vfsops.c
 hammer_vnops.c

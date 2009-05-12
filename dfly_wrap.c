@@ -190,3 +190,9 @@ int hz;
 void bwillwrite(int bytes) {
     panic("bwillwrite");
 }
+
+// from kern/kern_prot.c
+int priv_check_cred(struct ucred *cred, int priv, int flags) {
+    panic("priv_check_cred");
+    return 0;
+}

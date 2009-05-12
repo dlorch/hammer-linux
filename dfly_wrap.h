@@ -53,6 +53,8 @@ void *dfly_kmalloc (unsigned long size, struct malloc_type *type, int flags);
 #define KTR_INFO_MASTER_EXTERN(master)
 
 // from sys/proc.h
+#define PRISON_ROOT     0x1
+
 struct lwp {};
 
 // from sys/thread.h
@@ -230,6 +232,7 @@ void nlookup_done(struct nlookupdata *);
 #define KKASSERT(exp) BUG_ON(!exp)
 #define KASSERT(exp,msg) BUG_ON(!exp)
 #define kprintf printk
+#define ksnprintf snprintf
 void Debugger (const char *msg);
 void bzero (volatile void *buf, size_t len);
 void bcopy (volatile const void *from, volatile void *to, size_t len);
@@ -275,6 +278,11 @@ extern int hz;                          /* system clock's frequency */
 
 // from sys/iosched.h
 void bwillwrite(int bytes);
+
+// from sys/priv.h
+#define PRIV_ROOT       1       /* Catch-all during development. */
+
+int priv_check_cred(struct ucred *cred, int priv, int flags);
 
 /*
  * conflicting Linux definitions
