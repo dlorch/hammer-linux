@@ -78,6 +78,8 @@ typedef uint64_t u_quad_t;        /* quads */
 #define PCATCH          0x00000100      /* tsleep checks signals */
 
 // from sys/time.h
+extern time_t   time_second;
+
 struct krate {
     int freq;
     int ticks;
@@ -228,6 +230,7 @@ void Debugger (const char *msg);
 void bzero (volatile void *buf, size_t len);
 void bcopy (volatile const void *from, volatile void *to, size_t len);
 uint32_t crc32(const void *buf, size_t size);
+uint32_t crc32_ext(const void *buf, size_t size, uint32_t ocrc);
 int tsleep (void *, int, const char *, int);
 void wakeup (void *chan);
 int copyin (const void *udaddr, void *kaddr, size_t len);

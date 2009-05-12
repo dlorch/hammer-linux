@@ -153,6 +153,8 @@ void wakeup(void *ident) {
 }
 
 // from kern/clock.c
+time_t time_second;             /* read-only 'passive' uptime in seconds */
+
 void getmicrotime(struct timeval *tvp) {
     panic("getmicrotime");
 }
