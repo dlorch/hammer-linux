@@ -143,3 +143,9 @@ void wakeup(void *ident) {
 void getmicrotime(struct timeval *tvp) {
     panic("getmicrotime");
 }
+
+// from sys/signal2.h
+int __cursig(struct lwp *lp, int mayblock, int maytrace) {
+    panic("__cursig");
+    return 0;
+}

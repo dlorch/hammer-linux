@@ -10,8 +10,6 @@ hammer_pfs.c
 hammer_prune.c
 hammer_reblock.c
 hammer_recover.c
-hammer_signal.c
 hammer_subs.c
-hammer_transaction.c
 hammer_vfsops.c
 hammer_vnops.c

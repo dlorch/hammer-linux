@@ -49,15 +49,20 @@ void *dfly_kmalloc (unsigned long size, struct malloc_type *type, int flags);
 // from sys/ktr.h
 #define KTR_INFO_MASTER_EXTERN(master)
 
+// from sys/proc.h
+struct lwp {};
+
 // from sys/thread.h
 #define crit_enter()
 #define crit_exit()
 
-struct thread {};
+struct thread {
+    struct lwp  *td_lwp;        /* (optional) associated lwp */
+};
 typedef struct thread *thread_t;
 
 // from platform/pc32/include/thread.h
-#define curthread   NULL
+#define curthread   ((thread_t)NULL)
 
 // from sys/types.h
 typedef u_int32_t udev_t;         /* device number */
@@ -241,6 +246,10 @@ int bcmp (const void *, const void *, size_t);
 
 // from cpu/i386/include/param.h
 #define MAXPHYS         (128 * 1024)    /* max raw I/O transfer size */
+
+// from sys/signal2.h
+#define CURSIG(lp)              __cursig(lp, 1, 0)
+int __cursig(struct lwp *, int, int);
 
 /*
  * conflicting Linux definitions
