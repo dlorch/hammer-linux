@@ -1,4 +1,3 @@
-hammer_cursor.c
 hammer_flusher.c
 hammer_freemap.c
 hammer_inode.c

@@ -216,6 +216,7 @@ void nlookup_done(struct nlookupdata *);
 
 // from sys/systm.h
 #define KKASSERT(exp) BUG_ON(!exp)
+#define KASSERT(exp,msg) BUG_ON(!exp)
 #define kprintf printk
 void Debugger (const char *msg);
 void bzero (volatile void *buf, size_t len);
