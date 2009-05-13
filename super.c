@@ -13,6 +13,63 @@
 #include "dfly_wrap.h"
 #include <vfs/hammer/hammer.h>
 
+// from vfs/hammer/hammer_vfsops.c
+int hammer_debug_io;
+int hammer_debug_general;
+int hammer_debug_debug = 1;     /* medium-error panics */
+int hammer_debug_inode;
+int hammer_debug_locks;
+int hammer_debug_btree;
+int hammer_debug_tid;
+int hammer_debug_recover;       /* -1 will disable, +1 will force */
+int hammer_debug_recover_faults;
+int hammer_cluster_enable = 1;      /* enable read clustering by default */
+int hammer_count_fsyncs;
+int hammer_count_inodes;
+int hammer_count_iqueued;
+int hammer_count_reclaiming;
+int hammer_count_records;
+int hammer_count_record_datas;
+int hammer_count_volumes;
+int hammer_count_buffers;
+int hammer_count_nodes;
+int64_t hammer_count_extra_space_used;
+int64_t hammer_stats_btree_lookups;
+int64_t hammer_stats_btree_searches;
+int64_t hammer_stats_btree_inserts;
+int64_t hammer_stats_btree_deletes;
+int64_t hammer_stats_btree_elements;
+int64_t hammer_stats_btree_splits;
+int64_t hammer_stats_btree_iterations;
+int64_t hammer_stats_record_iterations;
+
+int64_t hammer_stats_file_read;
+int64_t hammer_stats_file_write;
+int64_t hammer_stats_file_iopsr;
+int64_t hammer_stats_file_iopsw;
+int64_t hammer_stats_disk_read;
+int64_t hammer_stats_disk_write;
+int64_t hammer_stats_inode_flushes;
+int64_t hammer_stats_commits;
+
+int hammer_count_dirtybufspace;     /* global */
+int hammer_count_refedbufs;     /* global */
+int hammer_count_reservations;
+int hammer_count_io_running_read;
+int hammer_count_io_running_write;
+int hammer_count_io_locked;
+int hammer_limit_dirtybufspace;     /* per-mount */
+int hammer_limit_recs;          /* as a whole XXX */
+int hammer_autoflush = 2000;        /* auto flush */
+int hammer_bio_count;
+int hammer_verify_zone;
+int hammer_verify_data = 1;
+int hammer_write_mode;
+int64_t hammer_contention_count;
+int64_t hammer_zone_limit;
+
+// TODO initial values for variables above
+
 static struct file_system_type hammerfs_type;
 static struct super_operations hammerfs_super_operations;
 

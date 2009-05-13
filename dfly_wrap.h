@@ -14,7 +14,8 @@
 #include <asm/bug.h>      // for BUG_ON
 #include <linux/time.h>   // for struct timespec
 #include <linux/bio.h>    // for struct bio
-#include <linux/kernel.h> // for printk
+#include <linux/kernel.h> // for printk, simple_strtoul
+#include <linux/ctype.h>  // for isascii, isdigit, isalpha, isupper, isspace
 
 /*
  * required DragonFly BSD definitions
@@ -31,6 +32,8 @@
 
 // from sys/stat.h
 #define S_IFDB	0110000		/* record access file */
+#define UF_NOHISTORY    0x00000040      /* do not retain history/snapshots */
+#define SF_NOHISTORY    0x00400000      /* do not retain history/snapshots */
 
 // from sys/malloc.h
 #define MALLOC_DECLARE(type) \
@@ -228,11 +231,19 @@ int nlookup_init(struct nlookupdata *, const char *, enum uio_seg, int);
 int nlookup(struct nlookupdata *);
 void nlookup_done(struct nlookupdata *);
 
+// from cpu/*/*/stdarg.h
+typedef __builtin_va_list   __va_list;  /* internally known to gcc */
+#define __va_start(ap, last) \
+        __builtin_va_start(ap, last)
+#define __va_end(ap) \
+        __builtin_va_end(ap)
+
 // from sys/systm.h
 #define KKASSERT(exp) BUG_ON(!exp)
 #define KASSERT(exp,msg) BUG_ON(!exp)
 #define kprintf printk
 #define ksnprintf snprintf
+#define strtoul simple_strtoul
 void Debugger (const char *msg);
 void bzero (volatile void *buf, size_t len);
 void bcopy (volatile const void *from, volatile void *to, size_t len);
@@ -242,6 +253,8 @@ int tsleep (void *, int, const char *, int);
 void wakeup (void *chan);
 int copyin (const void *udaddr, void *kaddr, size_t len);
 int copyout (const void *kaddr, void *udaddr, size_t len);
+u_quad_t strtouq (const char *, char **, int);
+int kvprintf (const char *, __va_list);
 
 // from kern/vfs_subr.c
 #define KERN_MAXVNODES           5      /* int: max vnodes */
@@ -283,6 +296,9 @@ void bwillwrite(int bytes);
 #define PRIV_ROOT       1       /* Catch-all during development. */
 
 int priv_check_cred(struct ucred *cred, int priv, int flags);
+
+// from cpu/i386/include/limits.h
+#define UQUAD_MAX       ULLONG_MAX      /* max value for a uquad_t */
 
 /*
  * conflicting Linux definitions

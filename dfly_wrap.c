@@ -196,3 +196,9 @@ int priv_check_cred(struct ucred *cred, int priv, int flags) {
     panic("priv_check_cred");
     return 0;
 }
+
+// from kern/subr_prf.c
+int kvprintf(const char *fmt, __va_list ap) {
+    panic("kvprintf");
+    return 0;
+}
