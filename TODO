@@ -1,4 +1,3 @@
 hammer_inode.c
-hammer_io.c
 hammer_vfsops.c
 hammer_vnops.c
