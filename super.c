@@ -216,6 +216,31 @@ failed:
     return(error);
 }
 
+/*
+ * Report critical errors.  ip may be NULL.
+ */
+// from vfs/hammer/hammer_vfsops.c
+void
+hammer_critical_error(hammer_mount_t hmp, hammer_inode_t ip,
+              int error, const char *msg)
+{
+    panic("hammer_critical_error");
+#if 0
+    hmp->flags |= HAMMER_MOUNT_CRITICAL_ERROR;
+    krateprintf(&hmp->krate,
+        "HAMMER(%s): Critical error inode=%lld %s\n",
+        hmp->mp->mnt_stat.f_mntfromname,
+        (ip ? ip->obj_id : -1), msg);
+    if (hmp->ronly == 0) {
+        hmp->ronly = 2;     /* special errored read-only mode */
+        hmp->mp->mnt_flag |= MNT_RDONLY;
+        kprintf("HAMMER(%s): Forcing read-only mode\n",
+            hmp->mp->mnt_stat.f_mntfromname);
+    }
+    hmp->error = error;
+#endif
+}
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 struct super_block * hammerfs_get_sb(struct file_system_type *fs_type,
         int flags, const char *dev_name, void *data)

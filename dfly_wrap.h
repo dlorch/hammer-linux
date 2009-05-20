@@ -35,17 +35,39 @@
 #define UF_NOHISTORY    0x00000040      /* do not retain history/snapshots */
 #define SF_NOHISTORY    0x00400000      /* do not retain history/snapshots */
 
+// from cpu/i386/include/param.h
+#define SMP_MAXCPU      16
+
 // from sys/malloc.h
+struct malloc_type {
+    struct malloc_type *ks_next;    /* next in list */
+    long    ks_memuse[SMP_MAXCPU];  /* total memory held in bytes */
+    long    ks_loosememuse;         /* (inaccurate) aggregate memuse */
+    long    ks_limit;       /* most that are allowed to exist */
+    long    ks_size;        /* sizes of this thing that are allocated */
+    long    ks_inuse[SMP_MAXCPU]; /* # of allocs currently in use */
+    int64_t ks_calls;     /* total packets of this type ever allocated */
+    long    ks_maxused;     /* maximum number ever used */
+    uint32_t ks_magic;    /* if it's not magic, don't touch it */
+    const char *ks_shortdesc;       /* short description */
+    uint16_t ks_limblocks; /* number of times blocked for hitting limit */
+    uint16_t ks_mapblocks; /* number of times blocked for kernel map */
+    long    ks_reserved[4]; /* future use (module compatibility) */
+};
+
+#define M_MAGIC         877983977       /* time when first defined :-) */
 #define MALLOC_DECLARE(type) \
     extern struct malloc_type type[1]
+#define MALLOC_DEFINE(type, shortdesc, longdesc)        \
+    struct malloc_type type[1] = {                  \
+        { NULL, { 0 }, 0, 0, 0, { 0 }, 0, 0, M_MAGIC, shortdesc, 0, 0 } \
+    };
 #define M_WAITOK        0x0002  /* wait for resources / alloc from cache */
 #define M_ZERO          0x0100  /* bzero() the allocation */
 #define M_USE_RESERVE   0x0200  /* can eat into free list reserve */
 
 #define kfree(addr, type) dfly_kfree(addr, type)
 #define kmalloc(size, type, flags) dfly_kmalloc(size, type, flags)
-
-struct malloc_type {};
 
 MALLOC_DECLARE(M_TEMP);
 
