@@ -6,7 +6,6 @@ int desiredvnodes = KERN_MAXVNODES; // Maximum number of vnodes
 
 // from kern/vfs_nlookup.c
 int nlookup_init(struct nlookupdata *nd, const char *path, enum uio_seg seg, int flags) {
-    panic("nlookup_init");
     return ENOENT;
 }
 
