@@ -139,7 +139,7 @@ int vmntvnodescan(
 // from kern/kern_slaballoc.c
 #undef kfree
 void dfly_kfree(void *ptr, struct malloc_type *type) {
-    panic("dfly_kfree");
+    kfree(ptr);
 }
 
 #undef kmalloc
