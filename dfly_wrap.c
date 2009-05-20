@@ -138,13 +138,14 @@ int vmntvnodescan(
 }
 
 // from kern/kern_slaballoc.c
+#undef kfree
 void dfly_kfree(void *ptr, struct malloc_type *type) {
     panic("dfly_kfree");
 }
 
+#undef kmalloc
 void *dfly_kmalloc(unsigned long size, struct malloc_type *type, int flags) {
-    panic("dfly_kmalloc");
-    return 0;
+    return kmalloc(size, GFP_KERNEL);
 }
 
 MALLOC_DEFINE(M_TEMP, "temp", "misc temporary data buffers");

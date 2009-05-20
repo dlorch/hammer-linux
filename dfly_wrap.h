@@ -16,6 +16,7 @@
 #include <linux/bio.h>    // for struct bio
 #include <linux/kernel.h> // for printk, simple_strtoul
 #include <linux/ctype.h>  // for isascii, isdigit, isalpha, isupper, isspace
+#include <linux/slab.h>   // for kmalloc
 
 /*
  * required DragonFly BSD definitions
