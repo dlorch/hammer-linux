@@ -15,7 +15,7 @@ int nlookup(struct nlookupdata *nd) {
 }
 
 void nlookup_done(struct nlookupdata *nd) {
-    panic("nlookup_done");
+    // no-op
 }
 
 // from kern/vfs_subr.c
