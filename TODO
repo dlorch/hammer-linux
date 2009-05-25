@@ -1,3 +1,5 @@
-hammer_inode.c
-hammer_vfsops.c
-hammer_vnops.c
+0x080ae388 in vfs_kern_mount (type=0x8228494, flags=1, name=0x90d6000 "/hammer", data=0x0)
+    at fs/super.c:945
+945     BUG_ON(!mnt->mnt_sb);
+(gdb) c
+

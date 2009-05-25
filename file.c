@@ -86,3 +86,13 @@ static struct file_operations hammerfs_file_operations = {
     .read = hammerfs_read,
     .readdir = hammerfs_readdir
 };
+
+int hammerfs_setattr(struct dentry * dentry, struct iattr * iattr)
+{
+    return -EPERM; // can't touch this
+}
+
+static struct inode_operations hammerfs_inode_ops = {
+    .lookup = hammerfs_inode_lookup,
+    .setattr = hammerfs_setattr
+};

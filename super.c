@@ -3,12 +3,13 @@
  */
 
 #include <linux/module.h>
-#include <linux/fs.h>
+#include <linux/fs.h>          // for BLOCK_SIZE
 #include <linux/version.h>
 #include <linux/list.h>
 #include <linux/proc_fs.h>
 #include <linux/errno.h>
 #include <linux/string.h>
+#include <linux/buffer_head.h> // for sb_bread
 
 #include "dfly_wrap.h"
 #include <vfs/hammer/hammer.h>
@@ -68,44 +69,35 @@ int hammer_write_mode;
 int64_t hammer_contention_count;
 int64_t hammer_zone_limit;
 
-// TODO initial values for variables above
+int hammerfs_install_volume(struct hammer_mount *hmp, struct super_block *sb);
 
 static struct file_system_type hammerfs_type;
 static struct super_operations hammerfs_super_operations;
+static struct inode_operations hammerfs_inode_ops;
+static struct file_operations hammerfs_file_ops;
 
 // corresponds to hammer_vfs_mount
-static int hammerfs_fill_super(struct super_block *sb, void *data, int silent)
+static int
+hammerfs_fill_super(struct super_block *sb, void *data, int silent)
 {
     hammer_mount_t hmp;
     hammer_volume_t rootvol;
-    struct vnode *devvp = NULL;
     int error = -EINVAL;
-    int maxinodes;
 
     /*
      * Internal mount data structure
      */
-    hmp = kzalloc(sizeof(hmp), GFP_KERNEL);
+    hmp = kzalloc(sizeof(struct hammer_mount), GFP_KERNEL);
     if (!hmp)
         return -ENOMEM;
 
     sb->s_fs_info = hmp;
 
-    /*
-     * Make sure kmalloc type limits are set appropriately.  If root
-     * increases the vnode limit you may have to do a dummy remount
-     * to adjust the HAMMER inode limit.
-     */
-// TODO
-//    kmalloc_create(&hmp->m_misc, "HAMMER-others");
-//    kmalloc_create(&hmp->m_inodes, "HAMMER-inodes");
-   
-    maxinodes = desiredvnodes + desiredvnodes / 5 +
-            HAMMER_RECLAIM_WAIT;
-
-// TODO
-//        kmalloc_raise_limit(hmp->m_inodes,
-//                    maxinodes * sizeof(struct hammer_inode));
+    if(!sb_set_blocksize(sb, BLOCK_SIZE)) {
+        printk(KERN_ERR "HAMMER: %s: bad blocksize %d\n",
+            sb->s_id, BLOCK_SIZE);
+        goto failed;
+    }
 
     hmp->root_btree_beg.localization = 0x00000000U;
     hmp->root_btree_beg.obj_id = -0x8000000000000000LL;
@@ -160,14 +152,14 @@ static int hammerfs_fill_super(struct super_block *sb, void *data, int silent)
     /*
      * Load volumes
      */
-    error = hammer_install_volume(hmp, sb->s_id, devvp);
+    error = hammerfs_install_volume(hmp, sb);
 
     /*
      * Make sure we found a root volume
      */
     if (error == 0 && hmp->rootvol == NULL) {
         printk(KERN_ERR "HAMMER: No root volume found!\n");
-        error = EINVAL;
+        error = -EINVAL;
     }
 
     /*
@@ -175,25 +167,19 @@ static int hammerfs_fill_super(struct super_block *sb, void *data, int silent)
      */
     if (error == 0 && hammer_mountcheck_volumes(hmp)) {
         printk(KERN_ERR "HAMMER: Missing volumes, cannot mount!\n");
-        error = EINVAL;
+        error = -EINVAL;
     }
 
     if (error) {
-        // TODO hammer_free_hmp(mp);
-        return (error);
+        goto failed;
     }
 
-    sb->s_op = &hammerfs_super_operations;
-    sb->s_type = &hammerfs_type;
+   /*
+    * Locate the root directory using the root cluster's B-Tree as a
+    * starting point.  The root directory uses an obj_id of 1.
+    */
 
-    /*
-     * The root volume's ondisk pointer is only valid if we hold a
-     * reference to it.
-     */
-    rootvol = hammer_get_root_volume(hmp, &error);
-    if (error)
-        goto failed;
-
+    // TODO: retrieve inode=1
     /*
     hammerfs_root_inode = new_inode(sb);
     hammerfs_root_inode->i_op = &hammerfs_inode_ops;
@@ -204,15 +190,103 @@ static int hammerfs_fill_super(struct super_block *sb, void *data, int silent)
     sb->s_root = d_alloc_root(hammerfs_root_inode);
     */
 
+    /*
+     * Set super block operations
+     */
+    sb->s_op = &hammerfs_super_operations;
+    sb->s_type = &hammerfs_type;
+
     printk(KERN_INFO "HAMMER: %s: mounted filesystem\n", sb->s_id);
     return(0);
 
 failed:
+    return(error);
+}
+
+/**
+ * Load a HAMMER volume by name.  Returns 0 on success or a positive error
+ * code on failure.
+ */
+// corresponds to hammer_install_volume
+int
+hammerfs_install_volume(struct hammer_mount *hmp, struct super_block *sb) {
+    struct buffer_head * bh;
+    hammer_volume_t volume;
+    struct hammer_volume_ondisk *ondisk;
+    int error = 0;
+
     /*
-     * Cleanup and return.
+     * Allocate a volume structure
      */
-    if (error)
-        ; // TODO hammer_free_hmp(mp);
+    ++hammer_count_volumes;
+    volume = kzalloc(sizeof(struct hammer_volume), GFP_KERNEL);
+    volume->vol_name = kstrdup(sb->s_id, GFP_KERNEL);
+    volume->io.hmp = hmp;   /* bootstrap */
+    volume->io.offset = 0LL;
+    volume->io.bytes = HAMMER_BUFSIZE;
+
+// TODO: associate sb to volume -> modify struct hammer_volume (replace vnode against sb)
+
+    /*
+     * Extract the volume number from the volume header and do various
+     * sanity checks.
+     */
+    bh = sb_bread(sb, 0);
+    if(!bh) {
+        printk(KERN_ERR "HAMMER: %s: unable to read superblock\n", sb->s_id);
+        error = -EINVAL;
+        goto failed;
+    }
+
+    ondisk = (struct hammer_volume_ondisk *)bh->b_data;
+    if (ondisk->vol_signature != HAMMER_FSBUF_VOLUME) {
+        printk(KERN_ERR "hammer_mount: volume %s has an invalid header\n",
+                volume->vol_name);
+        error = -EINVAL;
+        goto failed;
+    }
+
+    volume->vol_no = ondisk->vol_no;
+    volume->buffer_base = ondisk->vol_buf_beg;
+    volume->vol_flags = ondisk->vol_flags;
+    volume->nblocks = ondisk->vol_nblocks; 
+    volume->maxbuf_off = HAMMER_ENCODE_RAW_BUFFER(volume->vol_no,
+                                ondisk->vol_buf_end - ondisk->vol_buf_beg);
+    volume->maxraw_off = ondisk->vol_buf_end;
+
+    if (RB_EMPTY(&hmp->rb_vols_root)) {
+        hmp->fsid = ondisk->vol_fsid;
+    } else if (bcmp(&hmp->fsid, &ondisk->vol_fsid, sizeof(uuid_t))) {
+        printk(KERN_ERR "hammer_mount: volume %s's fsid does not match "
+                        "other volumes\n", volume->vol_name);
+        error = -EINVAL;
+        goto failed;
+    }
+
+    /*
+     * Insert the volume structure into the red-black tree.
+     */
+    if (RB_INSERT(hammer_vol_rb_tree, &hmp->rb_vols_root, volume)) {
+        printk(KERN_ERR "hammer_mount: volume %s has a duplicate vol_no %d\n",
+            volume->vol_name, volume->vol_no);
+        error = -EEXIST;
+    }
+
+    /*
+     * Set the root volume .  HAMMER special cases rootvol the structure.
+     * We do not hold a ref because this would prevent related I/O
+     * from being flushed.
+     */
+    if (error == 0 && ondisk->vol_rootvol == ondisk->vol_no) {
+        hmp->rootvol = volume;
+        hmp->nvolumes = ondisk->vol_count;
+    }
+
+    return(0);
+
+failed:
+    if(bh)
+        brelse(bh);
     return(error);
 }
 
@@ -224,40 +298,18 @@ void
 hammer_critical_error(hammer_mount_t hmp, hammer_inode_t ip,
               int error, const char *msg)
 {
-    panic("hammer_critical_error");
-#if 0
-    hmp->flags |= HAMMER_MOUNT_CRITICAL_ERROR;
-    krateprintf(&hmp->krate,
-        "HAMMER(%s): Critical error inode=%lld %s\n",
-        hmp->mp->mnt_stat.f_mntfromname,
-        (ip ? ip->obj_id : -1), msg);
-    if (hmp->ronly == 0) {
-        hmp->ronly = 2;     /* special errored read-only mode */
-        hmp->mp->mnt_flag |= MNT_RDONLY;
-        kprintf("HAMMER(%s): Forcing read-only mode\n",
-            hmp->mp->mnt_stat.f_mntfromname);
-    }
+    printk(KERN_CRIT "HAMMER: Critical error %s\n", msg);
     hmp->error = error;
-#endif
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
-struct super_block * hammerfs_get_sb(struct file_system_type *fs_type,
-        int flags, const char *dev_name, void *data)
-{
-    return get_sb_nodev(fs_type, flags, data, hammerfs_fill_super);
-}
-#else
 int hammerfs_get_sb(struct file_system_type *fs_type,
         int flags, const char *dev_name, void *data, struct vfsmount *mnt)
 {
-    return get_sb_nodev(fs_type, flags, data, hammerfs_fill_super, mnt);
+    return get_sb_bdev(fs_type, flags, dev_name, data, hammerfs_fill_super, mnt);
 }
-#endif
 
 int hammerfs_statfs(struct dentry * dentry, struct kstatfs * kstatfs)
 {
-    printk("hammerfs_statfs\n");
     return -ENOMEM;
 }
 

@@ -878,7 +878,7 @@ int
 hammer_mkroot_pseudofs(hammer_transaction_t trans, struct ucred *cred,
 		       hammer_pseudofs_inmem_t pfsm)
 {
-    panic("hammer_mkdoor_pseudofs");
+    panic("hammer_mkroot_pseudofs");
 #if 0
 	hammer_inode_t ip;
 	struct vattr vap;

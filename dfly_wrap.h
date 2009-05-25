@@ -17,6 +17,7 @@
 #include <linux/kernel.h> // for printk, simple_strtoul
 #include <linux/ctype.h>  // for isascii, isdigit, isalpha, isupper, isspace
 #include <linux/slab.h>   // for kmalloc
+#include <linux/string.h> // for memcmp
 
 /*
  * required DragonFly BSD definitions
@@ -130,7 +131,9 @@ struct buf {
 };
 struct vnode;
 int bread (struct vnode *, off_t, int, struct buf **);
+#ifndef _LINUX_BUFFER_HEAD_H
 void brelse (struct buf *);
+#endif
 struct buf_rb_tree {
     void    *rbh_root;
 };
@@ -297,7 +300,7 @@ extern int desiredvnodes;
 #define LK_RETRY        0x00020000 /* vn_lock: retry until locked */
 
 // from sys/libkern.h
-int bcmp (const void *, const void *, size_t);
+#define bcmp(cs, ct, count) memcmp(cs, ct, count)
 
 // from cpu/i386/include/param.h
 #define MAXPHYS         (128 * 1024)    /* max raw I/O transfer size */

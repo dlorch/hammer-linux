@@ -6,12 +6,11 @@ int desiredvnodes = KERN_MAXVNODES; // Maximum number of vnodes
 
 // from kern/vfs_nlookup.c
 int nlookup_init(struct nlookupdata *nd, const char *path, enum uio_seg seg, int flags) {
-    return ENOENT;
+    return 0;
 }
 
 int nlookup(struct nlookupdata *nd) {
-    panic("nlookup");
-    return ENOENT;
+    return 0;
 }
 
 void nlookup_done(struct nlookupdata *nd) {
@@ -20,28 +19,23 @@ void nlookup_done(struct nlookupdata *nd) {
 
 // from kern/vfs_subr.c
 int count_udev (int x, int y) {
-    panic("count_udev");
     return 0;
 }
 
 int vfs_mountedon(struct vnode *vp) {
-    panic("vfs_mountedon");
     return 0;
 }
 
 int vinvalbuf(struct vnode *vp, int flags, int slpflag, int slptimeo) {
-    panic("vinvalbuf");
     return 0;
 }
 
 int vn_isdisk(struct vnode *vp, int *errp) {
-    panic("vn_isdisk");
     return 1;
 }
 
 int vn_lock(struct vnode *vp, int flags) {
-    panic("vn_lock");
-    return ENOENT;
+    return 0;
 }
 
 void vn_unlock(struct vnode *vp) {
@@ -72,8 +66,7 @@ void vrele(struct vnode *vp) {
 
 // from kern/vfs_cache.c
 int cache_vref(struct nchandle *nch, struct ucred *cred, struct vnode **vpp) {
-    panic("cache_vref");
-    return ENOENT;
+    return 0;
 }
 
 // from platform/*/*/db_interface.c
@@ -89,12 +82,6 @@ int copyout(const void *kaddr, void *udaddr, size_t len) {
 
 int copyin(const void *udaddr, void *kaddr, size_t len) {
     panic("copyin");
-    return 0;
-}
-
-// from libkern/bcmp.c
-int bcmp(const void *b1, const void *b2, size_t length) {
-    panic("bcmp");
     return 0;
 }
 
