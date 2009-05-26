@@ -69,7 +69,8 @@ int hammer_write_mode;
 int64_t hammer_contention_count;
 int64_t hammer_zone_limit;
 
-int hammerfs_install_volume(struct hammer_mount *hmp, struct super_block *sb);
+static int hammerfs_install_volume(struct hammer_mount *hmp, struct super_block *sb);
+struct inode *hammerfs_iget(struct super_block *sb, ino_t ino);
 
 static struct file_system_type hammerfs_type;
 static struct super_operations hammerfs_super_operations;
@@ -81,7 +82,7 @@ static int
 hammerfs_fill_super(struct super_block *sb, void *data, int silent)
 {
     hammer_mount_t hmp;
-    hammer_volume_t rootvol;
+    struct inode *root;
     int error = -EINVAL;
 
     /*
@@ -174,27 +175,30 @@ hammerfs_fill_super(struct super_block *sb, void *data, int silent)
         goto failed;
     }
 
-   /*
-    * Locate the root directory using the root cluster's B-Tree as a
-    * starting point.  The root directory uses an obj_id of 1.
-    */
-
-    // TODO: retrieve inode=1
-    /*
-    hammerfs_root_inode = new_inode(sb);
-    hammerfs_root_inode->i_op = &hammerfs_inode_ops;
-    hammerfs_root_inode->i_fop = &hammerfs_file_ops;
-    hammerfs_root_inode->i_ino = 123;
-    hammerfs_root_inode->i_mode = S_IFDIR | 0755;
-
-    sb->s_root = d_alloc_root(hammerfs_root_inode);
-    */
-
     /*
      * Set super block operations
      */
     sb->s_op = &hammerfs_super_operations;
     sb->s_type = &hammerfs_type;
+
+   /*
+    * Locate the root directory using the root cluster's B-Tree as a
+    * starting point.  The root directory uses an obj_id of 1.
+    */
+    root = hammerfs_iget(sb, HAMMER_OBJID_ROOT);
+    if (IS_ERR(root)) {
+        printk(KERN_ERR "HAMMER: get root inode failed\n");
+        error = PTR_ERR(root);
+        goto failed;
+    }
+
+    sb->s_root = d_alloc_root(root);
+    if (!sb->s_root) {
+        printk(KERN_ERR "HAMMER: get root dentry failed\n");
+        iput(root);
+        error = -ENOMEM;
+        goto failed;
+    }
 
     printk(KERN_INFO "HAMMER: %s: mounted filesystem\n", sb->s_id);
     return(0);
@@ -208,7 +212,7 @@ failed:
  * code on failure.
  */
 // corresponds to hammer_install_volume
-int
+static int
 hammerfs_install_volume(struct hammer_mount *hmp, struct super_block *sb) {
     struct buffer_head * bh;
     hammer_volume_t volume;
@@ -225,7 +229,7 @@ hammerfs_install_volume(struct hammer_mount *hmp, struct super_block *sb) {
     volume->io.offset = 0LL;
     volume->io.bytes = HAMMER_BUFSIZE;
 
-// TODO: associate sb to volume -> modify struct hammer_volume (replace vnode against sb)
+    volume->sb = sb;
 
     /*
      * Extract the volume number from the volume header and do various
@@ -246,6 +250,7 @@ hammerfs_install_volume(struct hammer_mount *hmp, struct super_block *sb) {
         goto failed;
     }
 
+    volume->ondisk = ondisk;
     volume->vol_no = ondisk->vol_no;
     volume->buffer_base = ondisk->vol_buf_beg;
     volume->vol_flags = ondisk->vol_flags;

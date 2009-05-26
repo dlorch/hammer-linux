@@ -359,8 +359,6 @@ hammer_get_inode(hammer_transaction_t trans, hammer_inode_t dip,
 		 int64_t obj_id, hammer_tid_t asof, u_int32_t localization,
 		 int flags, int *errorp)
 {
-    panic("hammer_get_inode");
-#if 0
 	hammer_mount_t hmp = trans->hmp;
 	struct hammer_inode_info iinfo;
 	struct hammer_cursor cursor;
@@ -396,7 +394,7 @@ loop:
 	/*
 	 * Allocate a new inode structure and deal with races later.
 	 */
-	ip = kmalloc(sizeof(*ip), hmp->m_inodes, M_WAITOK|M_ZERO);
+    ip = kzalloc(sizeof(struct hammer_inode), GFP_KERNEL);
 	++hammer_count_inodes;
 	++hmp->count_inodes;
 	ip->obj_id = obj_id;
@@ -509,7 +507,6 @@ retry:
 	hammer_done_cursor(&cursor);
 	trans->flags |= HAMMER_TRANSF_NEWINODE;
 	return (ip);
-#endif
 }
 
 /*
@@ -727,8 +724,6 @@ hammer_pseudofs_inmem_t
 hammer_load_pseudofs(hammer_transaction_t trans,
 		     u_int32_t localization, int *errorp)
 {
-    panic("hammer_load_pseudofs");
-#if 0
 	hammer_mount_t hmp = trans->hmp;
 	hammer_inode_t ip;
 	hammer_pseudofs_inmem_t pfsm;
@@ -756,7 +751,7 @@ retry:
 		ip = NULL;
 	}
 
-	pfsm = kmalloc(sizeof(*pfsm), hmp->m_misc, M_WAITOK | M_ZERO);
+	pfsm = kzalloc(sizeof(*pfsm), GFP_KERNEL);
 	pfsm->localization = localization;
 	pfsm->pfsd.unique_uuid = trans->rootvol->ondisk->vol_fsid;
 	pfsm->pfsd.shared_uuid = pfsm->pfsd.unique_uuid;
@@ -802,7 +797,6 @@ retry:
 		goto retry;
 	}
 	return(pfsm);
-#endif
 }
 
 /*
@@ -1224,8 +1218,6 @@ retry:
 void
 hammer_rel_inode(struct hammer_inode *ip, int flush)
 {
-    panic("hammer_rel_inode");
-#if 0
 	/*hammer_mount_t hmp = ip->hmp;*/
 
 	/*
@@ -1260,7 +1252,6 @@ hammer_rel_inode(struct hammer_inode *ip, int flush)
 			}
 		}
 	}
-#endif
 }
 
 /*
@@ -2851,7 +2842,7 @@ hammer_inode_wakereclaims(hammer_inode_t ip, int dowake)
 void
 hammer_inode_waitreclaims(hammer_mount_t hmp)
 {
-    panic("hammer_inode_waitreclaims");
+    // no-op
 #if 0
 	struct hammer_reclaim reclaim;
 	int delay;

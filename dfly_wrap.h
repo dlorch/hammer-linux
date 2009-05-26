@@ -17,7 +17,8 @@
 #include <linux/kernel.h> // for printk, simple_strtoul
 #include <linux/ctype.h>  // for isascii, isdigit, isalpha, isupper, isspace
 #include <linux/slab.h>   // for kmalloc
-#include <linux/string.h> // for memcmp
+#include <linux/string.h> // for memcmp, memcpy, memset
+#include <linux/buffer_head.h> // for brelse
 
 /*
  * required DragonFly BSD definitions
@@ -130,7 +131,7 @@ struct buf {
     caddr_t b_data;                 /* Memory, superblocks, indirect etc. */
 };
 struct vnode;
-int bread (struct vnode *, off_t, int, struct buf **);
+int bread (struct super_block*, off_t, int, struct buf **);
 #ifndef _LINUX_BUFFER_HEAD_H
 void brelse (struct buf *);
 #endif
@@ -224,7 +225,9 @@ struct vnode {
             int vu_uminor;
             struct cdev *vu_cdevinfo; /* device (VCHR, VBLK) */
         } vu_cdev;
-   } v_un;
+    } v_un;
+
+    struct super_block *sb; // defined by us, we use this for sb_bread()
 };
 
 int vinvalbuf (struct vnode *vp, int save, int slpflag, int slptimeo);
@@ -265,14 +268,14 @@ typedef __builtin_va_list   __va_list;  /* internally known to gcc */
         __builtin_va_end(ap)
 
 // from sys/systm.h
-#define KKASSERT(exp) BUG_ON(!exp)
-#define KASSERT(exp,msg) BUG_ON(!exp)
+#define KKASSERT(exp) BUG_ON(!(exp))
+#define KASSERT(exp,msg) BUG_ON(!(exp))
 #define kprintf printk
 #define ksnprintf snprintf
 #define strtoul simple_strtoul
+#define bcopy memcpy
+#define bzero(buf, len) memset(buf, 0, len)
 void Debugger (const char *msg);
-void bzero (volatile void *buf, size_t len);
-void bcopy (volatile const void *from, volatile void *to, size_t len);
 uint32_t crc32(const void *buf, size_t size);
 uint32_t crc32_ext(const void *buf, size_t size, uint32_t ocrc);
 int tsleep (void *, int, const char *, int);

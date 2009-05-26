@@ -88,27 +88,54 @@ int copyin(const void *udaddr, void *kaddr, size_t len) {
 // from kern/vfs_bio.c
 int hidirtybufspace;
 
-int bread(struct vnode *vp, off_t loffset, int size, struct buf **bpp) {
-    panic("bread");
+int bread(struct super_block *sb, off_t loffset, int size, struct buf **bpp) {
+    struct buffer_head *bh;
+    unsigned i, num;
+    sector_t block;
+    int error;
+ 
+    BUG_ON(size % BLOCK_SIZE); // size must be multiple of BLOCK_SIZE
+    BUG_ON(loffset % BLOCK_SIZE); // loffset must be multiple of BLOCK_SIZE
+
+    *bpp = kzalloc(sizeof(**bpp), GFP_KERNEL);
+    if(!(*bpp)) {
+        error = -ENOMEM;
+        goto failed;
+    }
+
+    (*bpp)->b_data = kzalloc(size, GFP_KERNEL);
+    if(!(*bpp)->b_data) {
+        error = -ENOMEM;
+        goto failed;
+    }
+
+    num = size / BLOCK_SIZE;
+    block = loffset / BLOCK_SIZE;
+
+    for(i=0; i<num; ++i) {
+      bh = sb_bread(sb, block + i);
+      if(!bh) {
+        error = -ENOMEM;
+        goto failed;
+      }
+      memcpy(((*bpp)->b_data + i*BLOCK_SIZE), bh->b_data, BLOCK_SIZE);
+      brelse(bh);
+    }
+
     return 0;
+failed:
+    return(error);
 }
 
+#ifndef _LINUX_BUFFER_HEAD_H
 void brelse(struct buf *bp) {
     panic("brelse");
 }
+#endif
 
 int bd_heatup (void) {
     panic("bd_heatup");
     return 0;
-}
-
-// from ??
-void bzero (volatile void *buf, size_t len) {
-    panic("bzero");
-}
-
-void bcopy (volatile const void *from, volatile void *to, size_t len) {
-    panic("bcopy");
 }
 
 // from kern/vfs_mount.c
@@ -131,7 +158,7 @@ void dfly_kfree(void *ptr, struct malloc_type *type) {
 
 #undef kmalloc
 void *dfly_kmalloc(unsigned long size, struct malloc_type *type, int flags) {
-    return kmalloc(size, GFP_KERNEL);
+    return kzalloc(size, GFP_KERNEL);
 }
 
 MALLOC_DEFINE(M_TEMP, "temp", "misc temporary data buffers");
@@ -139,7 +166,7 @@ MALLOC_DEFINE(M_TEMP, "temp", "misc temporary data buffers");
 // from kern/kern_synch.c
 int tsleep(void *ident, int flags, const char *wmesg, int timo) {
     panic("tsleep");
-    return EWOULDBLOCK;
+    return 0;
 }
 
 void wakeup(void *ident) {
@@ -150,7 +177,7 @@ void wakeup(void *ident) {
 time_t time_second;             /* read-only 'passive' uptime in seconds */
 
 void getmicrotime(struct timeval *tvp) {
-    panic("getmicrotime");
+    do_gettimeofday(tvp);
 }
 
 // from sys/signal2.h

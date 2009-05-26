@@ -46,7 +46,10 @@
  * later when we can.
  */
 
+#include <linux/buffer_head.h> // for sb_bread
+
 #include "dfly_wrap.h"
+
 #include <vfs/hammer/hammer.h>
 #include <sys/fcntl.h>
 #include <sys/nlookup.h>
@@ -186,45 +189,20 @@ hammer_io_wait_all(hammer_mount_t hmp, const char *ident)
  * some other.
  */
 int
-hammer_io_read(struct vnode *devvp, struct hammer_io *io, hammer_off_t limit)
+hammer_io_read(struct super_block *sb, struct hammer_io *io, hammer_off_t limit)
 {
-    panic("hammer_io_read");
-#if 0
 	struct buf *bp;
 	int   error;
 
 	if ((bp = io->bp) == NULL) {
 		hammer_count_io_running_read += io->bytes;
-		if (hammer_cluster_enable) {
-			error = cluster_read(devvp, limit,
-					     io->offset, io->bytes,
-					     HAMMER_CLUSTER_SIZE,
-					     HAMMER_CLUSTER_BUFS, &io->bp);
-		} else {
-			error = bread(devvp, io->offset, io->bytes, &io->bp);
-		}
+	    bread(sb, io->offset, io->bytes, &io->bp);
 		hammer_stats_disk_read += io->bytes;
 		hammer_count_io_running_read -= io->bytes;
-
-		/*
-		 * The code generally assumes b_ops/b_dep has been set-up,
-		 * even if we error out here.
-		 */
-		bp = io->bp;
-		bp->b_ops = &hammer_bioops;
-		KKASSERT(LIST_FIRST(&bp->b_dep) == NULL);
-		LIST_INSERT_HEAD(&bp->b_dep, &io->worklist, node);
-		BUF_KERNPROC(bp);
-		KKASSERT(io->modified == 0);
-		KKASSERT(io->running == 0);
-		KKASSERT(io->waiting == 0);
-		io->released = 0;	/* we hold an active lock on bp */
 	} else {
 		error = 0;
 	}
 	return(error);
-#endif
-    return 0;
 }
 
 /*
@@ -239,7 +217,7 @@ hammer_io_read(struct vnode *devvp, struct hammer_io *io, hammer_off_t limit)
  * increment the modify_refs count.
  */
 int
-hammer_io_new(struct vnode *devvp, struct hammer_io *io)
+hammer_io_new(struct super_block *sb, struct hammer_io *io)
 {
     panic("hammer_io_new");
 #if 0
