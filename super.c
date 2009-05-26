@@ -10,6 +10,7 @@
 #include <linux/errno.h>
 #include <linux/string.h>
 #include <linux/buffer_head.h> // for sb_bread
+#include "hammerfs.h"
 
 #include "dfly_wrap.h"
 #include <vfs/hammer/hammer.h>
@@ -71,11 +72,6 @@ int64_t hammer_zone_limit;
 
 static int hammerfs_install_volume(struct hammer_mount *hmp, struct super_block *sb);
 struct inode *hammerfs_iget(struct super_block *sb, ino_t ino);
-
-static struct file_system_type hammerfs_type;
-static struct super_operations hammerfs_super_operations;
-static struct inode_operations hammerfs_inode_ops;
-static struct file_operations hammerfs_file_ops;
 
 // corresponds to hammer_vfs_mount
 static int
@@ -318,14 +314,14 @@ int hammerfs_statfs(struct dentry * dentry, struct kstatfs * kstatfs)
     return -ENOMEM;
 }
 
-static struct file_system_type hammerfs_type = {
+struct file_system_type hammerfs_type = {
     .owner   = THIS_MODULE,
     .name    = "hammer",
     .get_sb  = hammerfs_get_sb,
     .kill_sb = kill_anon_super
 };
 
-static struct super_operations hammerfs_super_operations = {
+struct super_operations hammerfs_super_operations = {
     .statfs  = hammerfs_statfs
 };
 

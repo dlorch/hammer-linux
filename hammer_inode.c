@@ -1218,6 +1218,10 @@ retry:
 void
 hammer_rel_inode(struct hammer_inode *ip, int flush)
 {
+// since all the lock handling and reference counting has been
+// replaced by no-ops, better make this a no-op, too (at least for
+// the time being)
+#if 0
 	/*hammer_mount_t hmp = ip->hmp;*/
 
 	/*
@@ -1252,6 +1256,7 @@ hammer_rel_inode(struct hammer_inode *ip, int flush)
 			}
 		}
 	}
+#endif
 }
 
 /*

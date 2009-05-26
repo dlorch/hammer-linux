@@ -38,6 +38,9 @@
  * implementation.  See hammer_disk.h for on-disk structures.
  */
 
+#ifndef _HAMMER_H
+#define _HAMMER_H
+
 #include <linux/buffer_head.h> // for sb_bread
 
 #include "dfly_wrap.h"
@@ -1280,3 +1283,4 @@ hammer_modify_node_done(hammer_node_t node)
 	hammer_modify_node(trans, node, &(node)->ondisk->field,	\
 			     sizeof((node)->ondisk->field))
 
+#endif /* _HAMMER_H */

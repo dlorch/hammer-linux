@@ -9,14 +9,13 @@
 #include <linux/proc_fs.h>
 #include <linux/errno.h>
 #include <linux/string.h>
-#include "dfly_wrap.h"
+#include "hammerfs.h"
 
-static struct inode_operations hammerfs_inode_ops;
-static struct file_operations hammerfs_file_ops;
+#include "dfly_wrap.h"
 
 static int hammerfs_open(struct inode * inode, struct file * file)
 {
-    printk("proc_hammer_open(node->i_ino=%lu)\n", inode->i_ino);
+    printk("hammerfs_open(node->i_ino=%lu)\n", inode->i_ino);
     return 0;
 }
 
@@ -56,7 +55,8 @@ int hammerfs_readdir(struct file * file, void * dirent, filldir_t filldir)
     return 1;
 }
 
-struct dentry * hammerfs_inode_lookup(struct inode * parent_inode, struct dentry * dentry, struct nameidata * nameidata)
+struct dentry * hammerfs_inode_lookup(struct inode *parent_inode, struct dentry *dentry,
+                                     struct nameidata *nameidata)
 {
 //    struct inode * file_inode;
 
@@ -80,19 +80,34 @@ struct dentry * hammerfs_inode_lookup(struct inode * parent_inode, struct dentry
     return NULL;
 }
 
-static struct file_operations hammerfs_file_operations = {
+struct file_operations hammerfs_file_operations = {
     .owner = THIS_MODULE,
     .open = hammerfs_open,
     .read = hammerfs_read,
     .readdir = hammerfs_readdir
 };
 
-int hammerfs_setattr(struct dentry * dentry, struct iattr * iattr)
+int hammerfs_setattr(struct dentry *dentry, struct iattr *iattr)
 {
-    return -EPERM; // can't touch this
+    printk("hammerfs_setattr\n");
+    return -EPERM;
 }
 
-static struct inode_operations hammerfs_inode_ops = {
+int hammerfs_getattr(struct vfsmount *mnt, struct dentry *dentry,
+                     struct kstat *stat)
+{
+    struct inode *inode;
+
+    printk("hammerfs_getattr\n");    
+
+    inode = dentry->d_inode;
+    generic_fillattr(inode, stat);
+
+    return 0;
+}
+
+struct inode_operations hammerfs_inode_operations = {
     .lookup = hammerfs_inode_lookup,
-    .setattr = hammerfs_setattr
+    .setattr = hammerfs_setattr,
+    .getattr = hammerfs_getattr
 };
