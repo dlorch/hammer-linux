@@ -36,7 +36,7 @@ struct inode *hammerfs_iget(struct super_block *sb, ino_t ino) {
         goto failed;
     }
     error = hammerfs_get_inode(sb, ip, &inode);
-    hammer_rel_inode(ip, 0);
+//    hammer_rel_inode(ip, 0);
     hammer_done_transaction(&trans);
 
     return inode;
@@ -63,35 +63,8 @@ int hammerfs_get_inode(struct super_block *sb,
     (*inode)->i_gid = hammer_to_unix_xid(&ip->ino_data.gid);
     (*inode)->i_nlink = ip->ino_data.nlinks;
     (*inode)->i_size = ip->ino_data.size;
-    (*inode)->i_mode = ip->ino_data.mode;
-
-    switch(ip->ino_data.obj_type) {
-    case HAMMER_OBJTYPE_DIRECTORY:
-        (*inode)->i_mode |= S_IFDIR;
-        break;
-    case HAMMER_OBJTYPE_REGFILE:
-        (*inode)->i_mode |= S_IFREG;
-        break;
-    case HAMMER_OBJTYPE_FIFO:
-        (*inode)->i_mode |= S_IFIFO;
-        break;
-    case HAMMER_OBJTYPE_CDEV:
-        (*inode)->i_mode |= S_IFCHR;
-        break;
-    case HAMMER_OBJTYPE_BDEV:
-        (*inode)->i_mode |= S_IFBLK;
-        break;
-    case HAMMER_OBJTYPE_SOFTLINK:
-        (*inode)->i_mode |= S_IFLNK;
-        break;
-    case HAMMER_OBJTYPE_SOCKET:
-        (*inode)->i_mode |= S_IFSOCK;
-        break;
-/*
-    case HAMMER_OBJTYPE_PSEUDOFS
-    case HAMMER_OBJTYPE_DBFILE
-*/
-    }
+    (*inode)->i_mode = ip->ino_data.mode | hammerfs_get_itype(ip->ino_data.obj_type);
+    (*inode)->i_private = ip;
 
     /*
      * We must provide a consistent atime and mtime for snapshots
@@ -115,3 +88,30 @@ int hammerfs_get_inode(struct super_block *sb,
 */
     return(0);
 }
+
+// corresponds to hammer_get_dtype
+int hammerfs_get_itype(char obj_type)
+{
+    switch(obj_type) {
+    case HAMMER_OBJTYPE_DIRECTORY:
+        return(S_IFDIR);
+    case HAMMER_OBJTYPE_REGFILE:
+        return(S_IFREG);
+    case HAMMER_OBJTYPE_FIFO:
+        return(S_IFIFO);
+    case HAMMER_OBJTYPE_CDEV:
+        return(S_IFCHR);
+    case HAMMER_OBJTYPE_BDEV:
+        return(S_IFBLK);
+    case HAMMER_OBJTYPE_SOFTLINK:
+        return(S_IFLNK);
+    case HAMMER_OBJTYPE_SOCKET:
+        return(S_IFSOCK);
+/*
+    case HAMMER_OBJTYPE_PSEUDOFS
+    case HAMMER_OBJTYPE_DBFILE
+*/
+    }
+}
+
+

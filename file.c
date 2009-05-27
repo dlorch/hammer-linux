@@ -35,27 +35,95 @@ static ssize_t hammerfs_read(struct file * file, char __user * buf, size_t size,
     return 0;
 }
 
+// corresponds to hammer_vop_readdir
 int hammerfs_readdir(struct file * file, void * dirent, filldir_t filldir)
 {
-    //struct dentry *de = file->f_dentry;
+    struct dentry *de = file->f_dentry;
+    struct hammer_transaction trans;
+    struct hammer_cursor cursor;
+    struct hammer_inode *ip = (struct hammer_inode *)de->d_inode->i_private;
+    hammer_base_elm_t base;
+    int r;
+    int error;
+    int dtype;
 
     printk("hammerfs_readdir(file->f_pos=%d)\n", file->f_pos);
 
-    /*
-    if(file->f_pos > 2)
-        return 1;
-    if(filldir(dirent, ".", 1, file->f_pos++, de->d_inode->i_ino, DT_DIR))
-        return 0;
-    if(filldir(dirent, "..", 2, file->f_pos++, de->d_parent->d_inode->i_ino, DT_DIR))
-        return 0;
-    if(filldir(dirent, "hammertime", strlen("hammertime"), file->f_pos++, 456, DT_REG))
-        return 0;
-        */
+   /*
+    * Handle artificial entries
+    */
 
-    return 1;
+    if(file->f_pos == 0) {
+        r = filldir(dirent, ".", 1, file->f_pos++, de->d_inode->i_ino, DT_DIR);
+    }
+
+    if(!r && file->f_pos == 1) {
+        if(de->d_parent->d_inode) {
+            r = filldir(dirent, "..", 2, file->f_pos++, de->d_parent->d_inode->i_ino, DT_DIR);
+        } else {
+            r = filldir(dirent, "..", 2, file->f_pos++, de->d_inode->i_ino, DT_DIR);
+        }
+    }
+
+    if(!r) {
+        hammer_simple_transaction(&trans, ip->hmp);
+
+       /*
+        * Key range (begin and end inclusive) to scan.  Directory keys
+        * directly translate to a 64 bit 'seek' position.
+        */
+        hammer_init_cursor(&trans, &cursor, &ip->cache[1], ip);
+        cursor.key_beg.localization = ip->obj_localization +
+                                      HAMMER_LOCALIZE_MISC;
+        cursor.key_beg.obj_id = ip->obj_id;
+        cursor.key_beg.create_tid = 0;
+        cursor.key_beg.delete_tid = 0;
+        cursor.key_beg.rec_type = HAMMER_RECTYPE_DIRENTRY;
+        cursor.key_beg.obj_type = 0;
+        cursor.key_beg.key = file->f_pos;
+
+        cursor.key_end = cursor.key_beg;
+        cursor.key_end.key = HAMMER_MAX_KEY;
+        cursor.asof = ip->obj_asof;
+        cursor.flags |= HAMMER_CURSOR_END_INCLUSIVE | HAMMER_CURSOR_ASOF;
+
+        error = hammer_ip_first(&cursor);
+
+        while (error == 0) {
+            error = hammer_ip_resolve_data(&cursor);
+            if (error)
+                break;
+            base = &cursor.leaf->base;
+            KKASSERT(cursor.leaf->data_len > HAMMER_ENTRY_NAME_OFF);
+
+            if (base->obj_id != de->d_inode->i_ino)
+                panic("readdir: bad record at %p", cursor.node);
+
+            /*
+             * Convert pseudo-filesystems into softlinks
+            */
+            dtype = hammerfs_get_itype(cursor.leaf->base.obj_type);
+            r = filldir(dirent, (void *)cursor.data->entry.name,
+                        cursor.leaf->data_len - HAMMER_ENTRY_NAME_OFF,
+                        file->f_pos, cursor.data->entry.obj_id, dtype);
+
+            if (r)
+                break;
+            file->f_pos++;
+            error = hammer_ip_next(&cursor);
+        }
+
+        hammer_done_cursor(&cursor);
+    }
+
+done:
+    /*hammer_done_transaction(&trans);*/
+    return(1); // TODO
+failed:
+    return(1);
 }
 
-struct dentry * hammerfs_inode_lookup(struct inode *parent_inode, struct dentry *dentry,
+struct dentry *hammerfs_inode_lookup(struct inode *parent_inode, struct dentry *dentry,
                                      struct nameidata *nameidata)
 {
 //    struct inode * file_inode;
@@ -89,7 +157,9 @@ struct file_operations hammerfs_file_operations = {
 
 int hammerfs_setattr(struct dentry *dentry, struct iattr *iattr)
 {
-    printk("hammerfs_setattr\n");
+    printk(KERN_INFO "hammerfs_setattr(ino=%lu, name=%s)\n",
+                     dentry->d_inode->i_ino, dentry->d_name.name);
+
     return -EPERM;
 }
 
@@ -98,7 +168,8 @@ int hammerfs_getattr(struct vfsmount *mnt, struct dentry *dentry,
 {
     struct inode *inode;
 
-    printk("hammerfs_getattr\n");    
+    printk(KERN_INFO "hammerfs_getattr(ino=%lu, name=%s)\n",
+                     dentry->d_inode->i_ino, dentry->d_name.name);
 
     inode = dentry->d_inode;
     generic_fillattr(inode, stat);

@@ -2882,8 +2882,6 @@ hammer_inode_waitreclaims(hammer_mount_t hmp)
 void
 hammer_inode_waithard(hammer_mount_t hmp)
 {
-    panic("hammer_inode_waithard");
-#if 0
 	/*
 	 * Hysteresis.
 	 */
@@ -2905,6 +2903,5 @@ hammer_inode_waithard(hammer_mount_t hmp)
 	 * Block for one flush cycle.
 	 */
 	hammer_flusher_wait_next(hmp);
-#endif
 }
 
