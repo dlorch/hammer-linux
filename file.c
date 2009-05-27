@@ -96,8 +96,9 @@ int hammerfs_readdir(struct file * file, void * dirent, filldir_t filldir)
             base = &cursor.leaf->base;
             KKASSERT(cursor.leaf->data_len > HAMMER_ENTRY_NAME_OFF);
 
-            if (base->obj_id != de->d_inode->i_ino)
+/*            if (base->obj_id != de->d_inode->i_ino)
                 panic("readdir: bad record at %p", cursor.node);
+*/
 
             /*
              * Convert pseudo-filesystems into softlinks
@@ -123,28 +124,105 @@ failed:
     return(1);
 }
 
+// corresponds to hammer_vop_nresolve
 struct dentry *hammerfs_inode_lookup(struct inode *parent_inode, struct dentry *dentry,
                                      struct nameidata *nameidata)
 {
-//    struct inode * file_inode;
+    struct hammer_transaction trans;
+    struct super_block *sb;
+    struct inode *inode;
+    hammer_inode_t dip;
+    hammer_inode_t ip;
+    hammer_tid_t asof;
+    struct hammer_cursor cursor;
+    int64_t namekey;
+    u_int32_t max_iterations;
+    int64_t obj_id;
+    int nlen;
+    int flags;
+    int error;
+    u_int32_t localization;
 
     printk("hammerfs_inode_lookup(parent_inode->i_ino=%d, dentry->d_name.name=%s)\n",
         parent_inode->i_ino, dentry->d_name.name);
 
+    sb = parent_inode->i_sb;
+    dip = (hammer_inode_t)parent_inode->i_private;
+    asof = dip->obj_asof;
+    localization = dip->obj_localization;   /* for code consistency */
+    nlen = dentry->d_name.len;
+    flags = dip->flags & HAMMER_INODE_RO;
+
+    hammer_simple_transaction(&trans, dip->hmp);
+
    /*
-   if(parent_inode->i_ino == hammerfs_root_inode->i_ino
-       && !strncmp(dentry->d_name.name, "hammertime", dentry->d_name.len)) {
-
-      file_inode = new_inode(parent_inode->i_sb);
-      file_inode->i_ino = 456;
-      file_inode->i_size = strlen(hammer_time[hammer_current_frame]); 
-      file_inode->i_mode = S_IFREG | 0644;
-      file_inode->i_op = &hammerfs_inode_ops;
-      file_inode->i_fop = &hammerfs_file_ops;
-      d_add(dentry, file_inode);
-    }
+    * Calculate the namekey and setup the key range for the scan.  This
+    * works kinda like a chained hash table where the lower 32 bits
+    * of the namekey synthesize the chain.
+    *
+    * The key range is inclusive of both key_beg and key_end.
     */
+    namekey = hammer_directory_namekey(dip, dentry->d_name.name, nlen,
+                                       &max_iterations);
 
+    error = hammer_init_cursor(&trans, &cursor, &dip->cache[1], dip);
+    cursor.key_beg.localization = dip->obj_localization +
+                                  HAMMER_LOCALIZE_MISC;
+    cursor.key_beg.obj_id = dip->obj_id;
+    cursor.key_beg.key = namekey;
+    cursor.key_beg.create_tid = 0;
+    cursor.key_beg.delete_tid = 0;
+    cursor.key_beg.rec_type = HAMMER_RECTYPE_DIRENTRY;
+    cursor.key_beg.obj_type = 0;
+
+    cursor.key_end = cursor.key_beg;
+    cursor.key_end.key += max_iterations;
+    cursor.asof = asof;
+    cursor.flags |= HAMMER_CURSOR_END_INCLUSIVE | HAMMER_CURSOR_ASOF;
+
+   /*
+    * Scan all matching records (the chain), locate the one matching
+    * the requested path component.
+    *
+    * The hammer_ip_*() functions merge in-memory records with on-disk
+    * records for the purposes of the search.
+    */
+    obj_id = 0;
+    localization = HAMMER_DEF_LOCALIZATION;
+
+    if (error == 0) {
+            error = hammer_ip_first(&cursor);
+            while (error == 0) {
+                error = hammer_ip_resolve_data(&cursor);
+                if (error)
+                        break;
+                if (nlen == cursor.leaf->data_len - HAMMER_ENTRY_NAME_OFF &&
+                    bcmp(dentry->d_name.name, cursor.data->entry.name, nlen) == 0) {
+                        obj_id = cursor.data->entry.obj_id;
+                        localization = cursor.data->entry.localization;
+                        break;
+                }
+                error = hammer_ip_next(&cursor);
+        }
+    }
+    hammer_done_cursor(&cursor);
+    if (error == 0) {
+        ip = hammer_get_inode(&trans, dip, obj_id,
+                              asof, localization,
+                              flags, &error); 
+        if(error == 0) {
+            error = hammerfs_get_inode(sb, ip, &inode);
+            /* hammer_rel_inode(ip, 0); */        
+        } else {
+            ip = NULL;
+        }
+        if(error == 0) {
+            d_add(dentry, inode);
+        }
+        goto done;
+    }
+done:
+    /*hammer_done_transaction(&trans);*/
     return NULL;
 }
 
