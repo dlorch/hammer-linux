@@ -1,7 +1,12 @@
 HAMMER Filesystem port to Linux
+===============================
 
-Installation:
-# make && insmod hammer.ko
+Daniel Lorch <dlorch@gmail.com>
+
+Installation: make && insmod hammer.ko
+
+Do not use on a production system. Unimplemented functions intentionally
+cause a kernel panic.
 
 Conventions:
 - Linux-specific functions prefixed with 'hammerfs_'

@@ -12,31 +12,125 @@
 #include "hammerfs.h"
 
 #include "dfly_wrap.h"
+#include <vfs/hammer/hammer.h>
 
-static int hammerfs_open(struct inode * inode, struct file * file)
+static int hammerfs_open(struct inode *inode, struct file *file)
 {
+#if DEBUG
     printk("hammerfs_open(node->i_ino=%lu)\n", inode->i_ino);
+#endif
+
     return 0;
 }
 
-static ssize_t hammerfs_read(struct file * file, char __user * buf, size_t size, loff_t * ppos)
+// corresponds to hammer_vop_read
+static ssize_t hammerfs_read(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
-    //size_t len;
+    hammer_mount_t hmp;
+    struct buffer_head *bh;
+    struct super_block *sb;
+    struct hammer_transaction trans;
+    struct hammer_cursor cursor;
+    struct inode *inode;
+    struct hammer_inode *ip;
+    hammer_base_elm_t base;
+    hammer_off_t disk_offset;
+    int64_t rec_offset;
+    int error;
+    int boff;
+    int n;
+    int block_num;
+    size_t len = 0;
+    hammer_off_t zone2_offset;
+    int vol_no;
+    hammer_volume_t volume;
+ 
+#if DEBUG
     printk("hammerfs_read(size=%d, ppos=%d)\n", (int)size, (int)*ppos);
-    /*
-    if(*ppos == 0) {
-      len = strlen(hammer_time[hammer_current_frame]);
-      copy_to_user(buf, hammer_time[hammer_current_frame], len);
-      *ppos += len;
-      hammer_current_frame = (hammer_current_frame + 1) % HAMMER_FRAMES;
-      return len;
-    }
+#endif
+
+    inode = file->f_path.dentry->d_inode;
+    ip = (struct hammer_inode *)inode->i_private;
+    sb = inode->i_sb;
+    hmp = (hammer_mount_t)sb->s_fs_info;
+
+    hammer_simple_transaction(&trans, ip->hmp);
+    hammer_init_cursor(&trans, &cursor, &ip->cache[1], ip);
+
+   /*
+    * Key range (begin and end inclusive) to scan.  Note that the key's
+    * stored in the actual records represent BASE+LEN, not BASE.  The
+    * first record containing bio_offset will have a key > bio_offset.
     */
-    return 0;
+    cursor.key_beg.localization = ip->obj_localization +
+                                  HAMMER_LOCALIZE_MISC;
+    cursor.key_beg.obj_id = ip->obj_id;
+    cursor.key_beg.create_tid = 0;
+    cursor.key_beg.delete_tid = 0;
+    cursor.key_beg.obj_type = 0;
+    cursor.key_beg.key = *ppos + 1;
+    cursor.asof = ip->obj_asof;
+    cursor.flags |= HAMMER_CURSOR_ASOF;
+
+    cursor.key_end = cursor.key_beg;
+    KKASSERT(ip->ino_data.obj_type == HAMMER_OBJTYPE_REGFILE);
+    
+    cursor.key_beg.rec_type = HAMMER_RECTYPE_DATA;
+    cursor.key_end.rec_type = HAMMER_RECTYPE_DATA;
+    cursor.key_end.key = 0x7FFFFFFFFFFFFFFFLL;
+    cursor.flags |= HAMMER_CURSOR_END_INCLUSIVE;
+
+    error = hammer_ip_first(&cursor);
+
+    if(error == 0) {
+       /*
+        * Get the base file offset of the record.  The key for
+        * data records is (base + bytes) rather then (base).
+        */
+        base = &cursor.leaf->base; 
+        rec_offset = base->key - cursor.leaf->data_len;
+
+       /*
+        * Calculate the data offset in the record and the number
+        * of bytes we can copy.
+        */
+        disk_offset = cursor.leaf->data_offset + rec_offset + *ppos;
+        len = min(min(BLOCK_SIZE, size), base->key - *ppos);
+
+        zone2_offset = hammer_blockmap_lookup(hmp, disk_offset, &error);
+        vol_no = HAMMER_VOL_DECODE(zone2_offset);
+        volume = hammer_get_volume(hmp, vol_no, &error);
+
+        disk_offset = volume->ondisk->vol_buf_beg + (zone2_offset & HAMMER_OFF_SHORT_MASK);
+
+        // TODO: move this into hammerfs_io_read, also calculate data length
+        block_num = disk_offset / BLOCK_SIZE;
+        boff = disk_offset % BLOCK_SIZE;
+
+       /*
+        * Read from disk
+        */    
+        bh = sb_bread(sb, block_num);
+        if(!bh) {
+            error = -ENOMEM;
+            goto failed;
+        }
+        copy_to_user(buf, bh->b_data + boff * sizeof(unsigned char), len);
+        brelse(bh);
+    }
+
+    hammer_done_cursor(&cursor);
+    hammer_done_transaction(&trans);
+
+    *ppos += len;
+    return len;
+
+failed:
+    return error;
 }
 
 // corresponds to hammer_vop_readdir
-int hammerfs_readdir(struct file * file, void * dirent, filldir_t filldir)
+int hammerfs_readdir(struct file *file, void *dirent, filldir_t filldir)
 {
     struct dentry *de = file->f_dentry;
     struct hammer_transaction trans;

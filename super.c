@@ -315,10 +315,11 @@ int hammerfs_statfs(struct dentry * dentry, struct kstatfs * kstatfs)
 }
 
 struct file_system_type hammerfs_type = {
-    .owner   = THIS_MODULE,
-    .name    = "hammer",
-    .get_sb  = hammerfs_get_sb,
-    .kill_sb = kill_anon_super
+    .owner    = THIS_MODULE,
+    .name     = "hammer",
+    .get_sb   = hammerfs_get_sb,
+    .kill_sb  = kill_anon_super,
+    .fs_flags = FS_REQUIRES_DEV
 };
 
 struct super_operations hammerfs_super_operations = {
