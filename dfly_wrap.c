@@ -156,6 +156,11 @@ void dfly_kfree(void *ptr, struct malloc_type *type) {
     kfree(ptr);
 }
 
+void dfly_brelse(struct buf *bp) {
+    kfree(bp->b_data);
+    kfree(bp);
+}
+
 #undef kmalloc
 void *dfly_kmalloc(unsigned long size, struct malloc_type *type, int flags) {
     return kzalloc(size, GFP_KERNEL);

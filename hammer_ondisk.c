@@ -216,7 +216,7 @@ hammer_install_volume(struct hammer_mount *hmp, const char *volname,
 		hmp->rootvol = volume;
 		hmp->nvolumes = ondisk->vol_count;
 		if (bp) {
-			brelse(bp);
+			dfly_brelse(bp);
 			bp = NULL;
 		}
 		hmp->mp->mnt_stat.f_blocks += ondisk->vol0_stat_bigblocks *
@@ -226,7 +226,7 @@ hammer_install_volume(struct hammer_mount *hmp, const char *volname,
 	}
 late_failure:
 	if (bp)
-		brelse(bp);
+		dfly_brelse(bp);
 	if (error) {
 		/*vinvalbuf(volume->devvp, V_SAVE, 0, 0);*/
 		if (setmp)
@@ -300,7 +300,7 @@ hammer_unload_volume(hammer_volume_t volume, void *data __unused)
 	 */
 	KKASSERT(volume->io.lock.refs == 0);
 	if (bp)
-		brelse(bp);
+		dfly_brelse(bp);
 
 	volume->ondisk = NULL;
 	if (volume->devvp) {
@@ -483,7 +483,7 @@ hammer_rel_volume(hammer_volume_t volume, int flush)
 	}
 	hammer_unref(&volume->io.lock);
 	if (bp)
-		brelse(bp);
+		dfly_brelse(bp);
 	crit_exit();
 }
 
@@ -907,7 +907,7 @@ hammer_rel_buffer(hammer_buffer_t buffer, int flush)
 	hammer_unref(&buffer->io.lock);
 	crit_exit();
 	if (bp)
-		brelse(bp);
+		dfly_brelse(bp);
 	if (freeme) {
 		--hammer_count_buffers;
 		kfree(buffer, hmp->m_misc);

@@ -136,6 +136,8 @@ int hammerfs_readpage(struct file *file, struct page *page) {
     int i;
     int block_num;
     int block_offset;
+    int bytes_read;
+    int64_t sb_offset;
     hammer_off_t zone2_offset;
     int vol_no;
     hammer_volume_t volume;
@@ -271,39 +273,38 @@ int hammerfs_readpage(struct file *file, struct page *page) {
         */
         disk_offset = cursor.leaf->data_offset + roff;
 
-        // the largest request we can satisfy is PAGE_SIZE
-        if(n > PAGE_SIZE) {
-            n = PAGE_SIZE;
-        }
+        // move this to hammerfs_direct_io_read
+        zone2_offset = hammer_blockmap_lookup(hmp, disk_offset, &error);
+        vol_no = HAMMER_VOL_DECODE(zone2_offset);
+        volume = hammer_get_volume(hmp, vol_no, &error);
 
-        while(n > 0) {
-            // move this to hammerfs_direct_io_read
-            zone2_offset = hammer_blockmap_lookup(hmp, disk_offset, &error);
-            vol_no = HAMMER_VOL_DECODE(zone2_offset);
-            volume = hammer_get_volume(hmp, vol_no, &error);
+        // n is the number of bytes we should read, sb_offset the
+        // offset on disk
+        sb_offset = volume->ondisk->vol_buf_beg + (zone2_offset & HAMMER_OFF_SHORT_MASK);
 
-            disk_offset = volume->ondisk->vol_buf_beg + (zone2_offset & HAMMER_OFF_SHORT_MASK);
+        while(n > 0 && boff != PAGE_SIZE) {
+            block_num = sb_offset / BLOCK_SIZE;
+            block_offset = sb_offset % BLOCK_SIZE;
 
-            block_num = disk_offset / BLOCK_SIZE;
-            block_offset = disk_offset % BLOCK_SIZE;
+            // the minimum between what is available and what we can maximally provide
+            bytes_read = min(BLOCK_SIZE - block_offset, PAGE_SIZE - boff);        
 
-           /*
-            * Read from disk
-            */
-            bh = sb_bread(sb, block_num);
+            bh = sb_bread(sb, block_num + i);
             if(!bh) {
                 error = -ENOMEM;
                 goto failed;
             }
-            memcpy((char*)page_addr + roff, (char*)bh->b_data + boff + block_offset, n);
-            n -= BLOCK_SIZE;
+            memcpy((char*)page_addr + roff, (char*)bh->b_data + boff + block_offset, bytes_read);
             brelse(bh);
+
+            n -= bytes_read;
+            boff += bytes_read;
+            roff += bytes_read;
         }
 
        /*
         * Iterate until we have filled the request.
         */
-        boff += n;
         if (boff == PAGE_SIZE)
             break;
         error = hammer_ip_next(&cursor);

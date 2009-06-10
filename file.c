@@ -18,6 +18,7 @@ static int hammerfs_open(struct inode *inode, struct file *file)
 {
     printk("hammerfs_open(node->i_ino=%lu)\n", inode->i_ino);
 
+    file->f_ra.ra_pages = 0;    /* No read-ahead */
     return generic_file_open (inode, file);
 }
 

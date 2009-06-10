@@ -135,6 +135,7 @@ int bread (struct super_block*, off_t, int, struct buf **);
 #ifndef _LINUX_BUFFER_HEAD_H
 void brelse (struct buf *);
 #endif
+void dfly_brelse (struct buf *);
 struct buf_rb_tree {
     void    *rbh_root;
 };
