@@ -5,25 +5,27 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-	<title>dlorch/hammer-linux @ GitHub</title>
+	<title>Porting the HAMMER File System to Linux</title>
 	
 	<style type="text/css">
 		body {
   		margin-top: 1.0em;
-  		background-color: #1d151a;
+  		background-color: #cecece;
 		  font-family: "Helvetica,Arial,FreeSans";
-  		color: #ffffff;
     }
     #container {
       margin: 0 auto;
+      padding: 20px;
       width: 700px;
+	  border: 1px solid gray;
+	  background-color: #ffffff;
     }
-		h1 { font-size: 3.8em; color: #e2eae5; margin-bottom: 3px; }
-		h1 .small { font-size: 0.4em; }
+		h1 { font-size: 3.8em; margin-top: 0; margin-bottom: 3px; }
+		h1 .small { font-size: 0.6em; }
 		h1 a { text-decoration: none }
-		h2 { font-size: 1.5em; color: #e2eae5; }
+		h2 { font-size: 1.5em; }
     h3 { text-align: center; color: #e2eae5; }
-    a { color: #e2eae5; }
+    a { color: #4b87c4; }
     .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
     .download { float: right; }
 		pre { background: #000; color: #fff; padding: 15px;}
@@ -37,40 +39,58 @@
   <a href="http://github.com/dlorch/hammer-linux"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
 
   <div id="container">
+	
+    <h1><span class="small">Porting the HAMMER File System to Linux</span></h1>
 
-    <div class="download">
-      <a href="http://github.com/dlorch/hammer-linux/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/dlorch/hammer-linux/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
+   <p>As part of a student project, I attempted to port the
+	  <a href="http://www.dragonflybsd.org/hammer/">HAMMER File System</a> from
+	  DragonFly BSD to Linux. The file system port implements the VFS operations
+      <tt>getattr</tt>, <tt>read</tt> and <tt>readdir</tt>. This means
+      you can mount a HAMMER block device on Linux, list its contents
+      and read from a file. Write support and support for pseudo file
+      systems are missing.</p>
+	
+	<p>The port has <i>prototype</i> quality and was only tested on a virtual
+	  machine. Crashes were observed from time to time, so please do not
+	  use this code on a live machine.</p>
+	
+	<p>Two interesting by-products were created: A port of the self-contained
+	  <a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-ported-to-linux.html"><tt>hammerread.c</tt></a>
+	  to Linux, and a <a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-fuse-read-hammer-filesystem.html">Linux FUSE module</a>
+	  based on the same code. Both tools are available from
+	  the <a href="#download">downloads section</a>.</p>
+	
+    <h2>Documentation</h2>
 
-    <h1><a href="http://github.com/dlorch/hammer-linux">hammer-linux</a>
-      <span class="small">by <a href="http://github.com/dlorch">dlorch</a></span></h1>
+	<ul>
+		<li><a href="http://hammerfs-ftw.blogspot.com/">Blog</a> - the project blog</li>
+		<li><a href="files/hammer-lorch-presentation.pdf">Presentation</a> - the project presentation</li>
+		<li><a href="files/hammer-lorch.pdf">Report</a> - the project report</li>
+	</ul>
 
-    <div class="description">
-      Porting the HAMMER File System to Linux
-    </div>
+    <h2>Community</h2>
 
-    <h2>Authors</h2>
-<p>Daniel Lorch (dlorch@gmail.com)<br/><br/>      </p>
-<h2>Contact</h2>
-<p>Daniel Lorch (dlorch@gmail.com)<br/>      </p>
+    <p>Please refer to the <a href="http://www.dragonflybsd.org/mailinglists/">HAMMER Filesystem Porting</a>
+	  mailinglist and newsgroup.</p>
 
-
+    <a name="download"></a>
     <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/dlorch/hammer-linux/zipball/master">zip</a> or
-      <a href="http://github.com/dlorch/hammer-linux/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/dlorch/hammer-linux</pre>
-    </p>
+
+    <ul>
+        <li>The Linux VFS port is available as either
+          <a href="http://github.com/dlorch/hammer-linux/zipball/master">zip</a> or
+          <a href="http://github.com/dlorch/hammer-linux/tarball/master">tar</a>.
+           You can also clone the project with <a href="http://git-scm.com">Git</a>
+           by running:
+           <pre>$ git clone git://github.com/dlorch/hammer-linux</pre>
+        </li>
+	    <li><a href="files/hammerdisk.raw.bz2">hammerdisk.raw.bz2</a> - raw dump of a hammer disk (<a href="files/hammerdisk.raw.txt">Contents</a>)</li>
+      	<li><a href="files/hammerread-0.1.tar.gz">hammerread-0.1.tar.gz</a> - port of the hammerread.c command line tool (<a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-ported-to-linux.html">Usage</a>)</li>
+      	<li><a href="files/fusehammer-0.1.tar.gz">fusehammer-0.1.tar.gz</a> - a FUSE module for the HAMMER filesystem (readonly) (<a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-fuse-read-hammer-filesystem.html">Usage</a>)</li>
+    </ul>
 
     <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/dlorch/hammer-linux">dlorch/hammer-linux</a>
+      &copy; 2009-2010 Daniel Lorch 
     </div>
 
   </div>
