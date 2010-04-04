@@ -1,3 +1,46 @@
-$ find . -type f -ls
-6400704     0 -rw-r--r--    1 root   wheel  12 Mar 23 20:04 ./test
-12801152    0 -rw-r--r--    1 root   wheel   4 Apr 11 00:56 ./a/b/c/bar
+RAW dump of a HAMMER partition
+==============================
+
+Taken from a DragonFly BSD machine with `dd if=/dev/ad1s03 of=hammerdisk.raw'.
+
+Contents
+--------
+
+- 5M:                 a 5 MB file with random data, produced with:
+                      $ dd if=/dev/random of=5M bs=1M count=5
+- a/b/c:              nested directories, produced with:
+                      $ mkdir -p a/b/c
+                      $ echo foo > a/b/c/bar
+- manyfiles:          contains 1000 files, produced with
+                      $ for i in `seq 1 1000`; do touch $i; done
+- sparse.file:        a 1MB sparse file created with sparse.c
+- snap-20090609-0137: a snapshot
+- pfs:                a pseudo file system
+
+Checksums
+---------
+
+$ md5 5M sparse test
+MD5 (5M) = 77c4539c40ad3717e934d320607a9fee
+MD5 (sparse) = e348afb9e5647c5b1468025340c2afd6
+MD5 (test) = f41121a903eafadf258962abc57c8644
+
+Listing
+-------
+
+$ find . -ls | grep -v manyfiles
+     1        0 drwxr-xr-x    1 root             wheel                   0 Apr  3 12:53 .
+     24002384        0 -rw-r--r--    1 root             wheel                 172 Apr  3 12:52 ./sparse.c
+     24002416     2048 -rw-r--r--    1 root             wheel             1048576 Apr  3 12:52 ./sparse.file
+     20801584        0 -rw-r--r--    1 root             wheel                  44 Jun  9  2009 ./5M.md5
+     20801536        0 lrwxr-xr-x    1 root             wheel                  28 Jun  9  2009 ./snap-20090609-0137 -> /hammer/@@0x00000001013d67e0
+     24002400        9 -rwxr-xr-x    1 root             wheel                4691 Apr  3 12:52 ./sparse
+     14401248        0 drwxr-xr-x    1 root             wheel                   0 Jun  9  2009 ./pfs
+     16001328        0 lrwxr-xr-x    1 root             wheel                  26 Jun  7  2009 ./pfs/master -> @@0xffffffffffffffff:00001
+     6400704        0 -rw-r--r--    1 root             wheel                  12 Mar 23  2009 ./test
+     24002432        0 -rw-r--r--    1 root             wheel                  48 Apr  3 12:53 ./sparse.md5
+     8001104        0 drwxr-xr-x    1 root             wheel                   0 Apr 11  2009 ./a
+     9601120        0 drwxr-xr-x    1 root             wheel                   0 Apr 11  2009 ./a/b
+     11201136        0 drwxr-xr-x    1 root             wheel                   0 Apr 11  2009 ./a/b/c
+     12801152        0 -rw-r--r--    1 root             wheel                   4 Apr 11  2009 ./a/b/c/bar
+     20801568    10240 -rw-r--r--    1 root             wheel             5242880 Jun  9  2009 ./5M
