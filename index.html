@@ -24,7 +24,6 @@
 		h1 .small { font-size: 0.6em; }
 		h1 a { text-decoration: none }
 		h2 { font-size: 1.5em; }
-    h3 { text-align: center; color: #e2eae5; }
     a { color: #4b87c4; }
     .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
     .download { float: right; }
@@ -76,18 +75,53 @@
     <a name="download"></a>
     <h2>Download</h2>
 
-    <ul>
-        <li>The Linux VFS port is available as either
-          <a href="http://github.com/dlorch/hammer-linux/zipball/master">zip</a> or
-          <a href="http://github.com/dlorch/hammer-linux/tarball/master">tar</a>.
-           You can also clone the project with <a href="http://git-scm.com">Git</a>
-           by running:
-           <pre>$ git clone git://github.com/dlorch/hammer-linux</pre>
-        </li>
-	    <li><a href="files/hammerdisk.raw.bz2">hammerdisk.raw.bz2</a> - raw dump of a hammer disk (<a href="files/hammerdisk.raw.txt">Contents</a>)</li>
-      	<li><a href="files/hammerread-0.2.tar.gz">hammerread-0.2.tar.gz</a> - port of the hammerread.c command line tool (<a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-ported-to-linux.html">Usage</a>)</li>
-      	<li><a href="files/fusehammer-0.2.tar.gz">fusehammer-0.2.tar.gz</a> - a FUSE module for the HAMMER filesystem (readonly) (<a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-fuse-read-hammer-filesystem.html">Usage</a>)</li>
-    </ul>
+    <h3>Linux VFS port</h3>
+	
+	<p>Download
+	  <a href="http://github.com/dlorch/hammer-linux/zipball/master">zip</a> /
+      <a href="http://github.com/dlorch/hammer-linux/tarball/master">tar</a>
+      or clone the project by running:
+<pre>$ git clone git://github.com/dlorch/hammer-linux
+$ make &amp;&amp; insmod hammer.ko	
+</pre></p>
+     
+     <h3>Hammerread Command-line Tool</h3>
+
+     <p>This is a port of the hammerread.c command line tool to Linux and OS X
+	   [<a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-ported-to-linux.html">Usage</a>].
+	 </p>
+	
+	 <p>Download
+	    <a href="http://github.com/dlorch/hammer-linux/zipball/hammerread">zip</a> /
+	    <a href="http://github.com/dlorch/hammer-linux/tarball/hammerread">tar</a>
+	    or clone the project by running:
+<pre>$ git clone git://github.com/dlorch/hammer-linux
+$ cd hammer-linux
+$ git checkout -b hammerread origin/hammerread
+$ make &amp;&amp; ./hammerread
+usage: hammerread &lt;dev&gt;
+</pre></p>
+      
+    <h3>A FUSE module for the HAMMER filesystem</h3>
+
+    <p>Requires <a href="http://fuse.sourceforge.net/">Linux FUSE</a> or
+	  <a href="http://code.google.com/p/macfuse/">MacFUSE</a>
+	  [<a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-fuse-read-hammer-filesystem.html">Usage</a>].</p>
+	
+	<p>Download
+		<a href="http://github.com/dlorch/hammer-linux/zipball/fuse-hammer">zip</a> /
+		<a href="http://github.com/dlorch/hammer-linux/tarball/fuse-hammer">tar</a>
+		or clone the project by running:
+	<pre>$ git clone git://github.com/dlorch/hammer-linux
+$ cd hammer-linux
+$ git checkout -b fuse-hammer origin/fuse-hammer
+$ make &amp;&amp; ./fusehammer
+usage: hammerread &lt;dev&gt;
+</pre></p>
+
+    <h3>Misc</h3>
+	 
+	<a href="files/hammerdisk.raw.bz2">hammerdisk.raw.bz2</a>: raw dump of a hammer disk (<a href="files/hammerdisk.raw.txt">Contents</a>).
 
     <div class="footer">
       &copy; 2009-2010 Daniel Lorch 
