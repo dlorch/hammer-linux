@@ -40,6 +40,9 @@
  * Compile with -DTESTING to obtain a binary.
  */
 
+#include "bsd_compat.h"
+
+#include <features.h>
 
 #if !defined(BOOT2) && !defined(TESTING)
 #define	LIBSTAND	1
@@ -53,6 +56,7 @@
 #ifdef TESTING
 #include <sys/fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <err.h>
 #include <stdio.h>
@@ -66,9 +70,11 @@
 #include "stand.h"
 #endif
 
-#include <vfs/hammer/hammer_disk.h>
+#include "hammer_disk.h"
+#include "hammerread.h"
 
 #ifndef BOOT2
+#if 0
 struct blockentry {
 	hammer_off_t	off;
 	int		use;
@@ -92,6 +98,7 @@ struct hfs {
 	int		lru;
 	struct blockentry cache[NUMCACHE];
 };
+#endif /* #if 0 */
 
 static void *
 hread(struct hfs *hfs, hammer_off_t off)
@@ -510,7 +517,7 @@ fail:
 }
 
 #ifndef BOOT2
-static int
+int
 hreaddir(struct hfs *hfs, ino_t ino, int64_t *off, struct dirent *de)
 {
 	struct hammer_base_elm key, end;
@@ -538,14 +545,14 @@ hreaddir(struct hfs *hfs, ino_t ino, int64_t *off, struct dirent *de)
 
 	*off = e->base.key + 1;		// remember next pos
 
-	de->d_namlen = e->data_len - HAMMER_ENTRY_NAME_OFF;
+	de->d_reclen = e->data_len - HAMMER_ENTRY_NAME_OFF;
 	de->d_type = hammer_get_dtype(e->base.obj_type);
 	hammer_data_ondisk_t ed = hread(hfs, e->data_offset);
 	if (ed == NULL)
 		return (-1);
 	de->d_ino = ed->entry.obj_id;
-	bcopy(ed->entry.name, de->d_name, de->d_namlen);
-	de->d_name[de->d_namlen] = 0;
+	bcopy(ed->entry.name, de->d_name, de->d_reclen);
+	de->d_name[de->d_reclen] = 0;
 
 	return (0);
 }
@@ -598,7 +605,7 @@ hresolve(struct hfs *hfs, ino_t dirino, const char *name)
 	return -1;
 }
 
-static ino_t
+ino_t
 hlookup(struct hfs *hfs, const char *path)
 {
 #if DEBUG > 2
@@ -634,7 +641,7 @@ hlookup(struct hfs *hfs, const char *path)
 
 
 #ifndef BOOT2
-static int
+int
 hstat(struct hfs *hfs, ino_t ino, struct stat* st)
 {
 	struct hammer_base_elm key;
@@ -669,7 +676,7 @@ hstat(struct hfs *hfs, ino_t ino, struct stat* st)
 }
 #endif
 
-static ssize_t
+ssize_t
 hreadf(struct hfs *hfs, ino_t ino, int64_t off, int64_t len, char *buf)
 {
 	int64_t startoff = off;
@@ -782,7 +789,7 @@ fsread(ino_t ino, void *buf, size_t len)
 #endif
 
 #ifndef BOOT2
-static int
+int
 hinit(struct hfs *hfs)
 {
 #if DEBUG
@@ -804,6 +811,7 @@ hinit(struct hfs *hfs)
 	if (volhead == NULL)
 		return (-1);
 
+#if 0
 #ifdef TESTING
 	printf("signature: %svalid\n",
 	       volhead->vol_signature != HAMMER_FSBUF_VOLUME ?
@@ -811,6 +819,7 @@ hinit(struct hfs *hfs)
 			"");
 	printf("name: %s\n", volhead->vol_name);
 #endif
+#endif /* #if 0 */
 
 	if (volhead->vol_signature != HAMMER_FSBUF_VOLUME) {
 		for (int i = 0; i < NUMCACHE; i++)
@@ -978,6 +987,7 @@ struct fs_ops hammer_fsops = {
 #endif	// LIBSTAND
 
 #ifdef TESTING
+#if 0
 int
 main(int argc, char **argv)
 {
@@ -1032,6 +1042,9 @@ main(int argc, char **argv)
 		}
 	}
 
+	hclose(&hfs);
+
 	return 0;
 }
+#endif
 #endif
