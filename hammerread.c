@@ -40,9 +40,11 @@
  * Compile with -DTESTING to obtain a binary.
  */
 
-#include "bsd_compat.h"
+#include "dfly_compat.h"
 
+#ifndef __APPLE__
 #include <features.h>
+#endif
 
 #if !defined(BOOT2) && !defined(TESTING)
 #define	LIBSTAND	1
@@ -64,6 +66,9 @@
 #include <string.h>
 #include <errno.h>
 #include <dirent.h>
+#ifdef __APPLE__
+#include <sys/dirent.h>
+#endif
 #endif
 
 #ifdef LIBSTAND
@@ -325,7 +330,7 @@ hammer_directory_namekey(const void *name __unused, int len __unused)
  * Misc
  */
 static u_int32_t
-hammer_to_unix_xid(uuid_t *uuid)
+hammer_to_unix_xid(dfly_uuid_t *uuid)
 {
 	return(*(u_int32_t *)&uuid->node[2]);
 }

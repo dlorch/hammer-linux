@@ -77,7 +77,7 @@ void le_uuid_enc(void *buf, struct uuid const *uuid);
 #else	/* _KERNEL */
 
 /* XXX namespace pollution? */
-typedef struct uuid uuid_t;
+typedef struct uuid dfly_uuid_t;
 
 __BEGIN_DECLS
 int	uuidgen(struct uuid *, int);

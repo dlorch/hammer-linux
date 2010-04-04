@@ -466,8 +466,8 @@ struct hammer_volume_ondisk {
 	int64_t vol_buf_end;	/* byte offset of volume EOF (on buf bndry) */
 	int64_t vol_locked;	/* reserved clusters are >= this offset */
 
-	uuid_t    vol_fsid;	/* identify filesystem */
-	uuid_t    vol_fstype;	/* identify filesystem type */
+	dfly_uuid_t vol_fsid;	/* identify filesystem */
+	dfly_uuid_t vol_fstype;	/* identify filesystem type */
 	char	  vol_name[64];	/* Name of volume */
 
 	int32_t vol_no;		/* volume number within filesystem */
@@ -594,8 +594,8 @@ struct hammer_inode_data {
 	u_int32_t rminor;	/* used by device nodes */
 	u_int64_t ctime;
 	int64_t parent_obj_id;	/* parent directory obj_id */
-	uuid_t	  uid;
-	uuid_t	  gid;
+	dfly_uuid_t uid;
+	dfly_uuid_t gid;
 
 	u_int8_t  obj_type;
 	u_int8_t  cap_flags;	/* capability support flags (extension) */
@@ -696,8 +696,8 @@ struct hammer_pseudofs_data {
 	hammer_tid_t	sync_end_tid;	/* current synchronizatoin point */
 	u_int64_t	sync_beg_ts;	/* real-time of last completed sync */
 	u_int64_t	sync_end_ts;	/* initiation of current sync cycle */
-	uuid_t		shared_uuid;	/* shared uuid (match required) */
-	uuid_t		unique_uuid;	/* unique uuid of this master/slave */
+    dfly_uuid_t shared_uuid;	/* shared uuid (match required) */
+	dfly_uuid_t unique_uuid;	/* unique uuid of this master/slave */
 	int32_t		reserved01;	/* reserved for future master_id */
 	int32_t		mirror_flags;	/* misc flags */
 	char		label[64];	/* filesystem space label */
