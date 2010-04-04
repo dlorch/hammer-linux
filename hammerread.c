@@ -40,6 +40,9 @@
  * Compile with -DTESTING to obtain a binary.
  */
 
+#include "bsd_compat.h"
+
+#include <features.h>
 
 #if !defined(BOOT2) && !defined(TESTING)
 #define	LIBSTAND	1
@@ -53,6 +56,7 @@
 #ifdef TESTING
 #include <sys/fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <err.h>
 #include <stdio.h>
@@ -66,7 +70,7 @@
 #include "stand.h"
 #endif
 
-#include <vfs/hammer/hammer_disk.h>
+#include "hammer_disk.h"
 
 #ifndef BOOT2
 struct blockentry {
@@ -538,14 +542,14 @@ hreaddir(struct hfs *hfs, ino_t ino, int64_t *off, struct dirent *de)
 
 	*off = e->base.key + 1;		// remember next pos
 
-	de->d_namlen = e->data_len - HAMMER_ENTRY_NAME_OFF;
+	de->d_reclen = e->data_len - HAMMER_ENTRY_NAME_OFF;
 	de->d_type = hammer_get_dtype(e->base.obj_type);
 	hammer_data_ondisk_t ed = hread(hfs, e->data_offset);
 	if (ed == NULL)
 		return (-1);
 	de->d_ino = ed->entry.obj_id;
-	bcopy(ed->entry.name, de->d_name, de->d_namlen);
-	de->d_name[de->d_namlen] = 0;
+	bcopy(ed->entry.name, de->d_name, de->d_reclen);
+	de->d_name[de->d_reclen] = 0;
 
 	return (0);
 }
@@ -1031,6 +1035,8 @@ main(int argc, char **argv)
 			free(buf);
 		}
 	}
+
+	hclose(&hfs);
 
 	return 0;
 }
