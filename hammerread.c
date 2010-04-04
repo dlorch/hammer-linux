@@ -1065,6 +1065,6 @@ main(int argc, char **argv)
 void
 hammer_time_to_timespec(u_int64_t xtime, struct timespec *ts)
 {
-        ts->tv_sec = (unsigned long)(xtime / 1000000);
-            ts->tv_nsec = (unsigned int)(xtime % 1000000) * 1000L;
+    ts->tv_sec = (unsigned long)(xtime / 1000000);
+    ts->tv_nsec = (unsigned int)(xtime % 1000000) * 1000L;
 }
