@@ -13,6 +13,8 @@ static struct hfs hfs;
 
 static int hammer_getattr(const char *path, struct stat *stbuf)
 {
+    memset(stbuf, 0, sizeof(struct stat));
+
     ino_t ino = hlookup(&hfs, path);
     if(ino == (ino_t)-1) {
         return -ENOENT;
@@ -122,6 +124,8 @@ static struct fuse_operations hammer_oper = {
 
 int main(int argc, char *argv[])
 {
+    int ret;
+
     if(argc < 3) {
         usage(argv);
         exit(EINVAL);
@@ -141,5 +145,9 @@ int main(int argc, char *argv[])
     argc--;
     argv++;
 
-    return fuse_main(argc, argv, &hammer_oper, NULL);
+    ret = fuse_main(argc, argv, &hammer_oper, NULL);
+
+    hclose(&hfs);
+
+    return ret;
 }

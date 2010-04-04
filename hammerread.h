@@ -34,5 +34,6 @@ int hstat(struct hfs *, ino_t, struct stat *);
 ino_t hlookup(struct hfs *hfs, const char *path);
 int hreaddir(struct hfs *, ino_t, int64_t *, struct dirent *);
 ssize_t hreadf(struct hfs *, ino_t, int64_t, int64_t, char *);
+void hclose(struct hfs *hfs);
 
 #endif /* _HAMMERREAD_H_ */
