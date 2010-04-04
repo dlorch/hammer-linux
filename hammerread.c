@@ -66,6 +66,7 @@
 #include <string.h>
 #include <errno.h>
 #include <dirent.h>
+#include <time.h>
 #ifdef __APPLE__
 #include <sys/dirent.h>
 #endif
@@ -677,6 +678,12 @@ hstat(struct hfs *hfs, ino_t ino, struct stat* st)
 	st->st_gid = hammer_to_unix_xid(&ed->inode.gid);
 	st->st_size = ed->inode.size;
 
+#ifdef __APPLE__
+    hammer_time_to_timespec(ed->inode.atime, &st->st_atimespec);
+    hammer_time_to_timespec(ed->inode.ctime, &st->st_ctimespec);
+    hammer_time_to_timespec(ed->inode.mtime, &st->st_mtimespec);
+#endif
+
 	return (0);
 }
 #endif
@@ -1053,3 +1060,11 @@ main(int argc, char **argv)
 }
 #endif /* #if 0 */
 #endif
+
+// from hammer_subs.c
+void
+hammer_time_to_timespec(u_int64_t xtime, struct timespec *ts)
+{
+        ts->tv_sec = (unsigned long)(xtime / 1000000);
+            ts->tv_nsec = (unsigned int)(xtime % 1000000) * 1000L;
+}
