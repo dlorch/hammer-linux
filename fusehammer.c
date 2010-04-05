@@ -111,25 +111,19 @@ static int hammer_read(const char *path, char *buf, size_t size, off_t offset,
 
 static int hammer_readlink(const char *path, char *buf, size_t size)
 {
+    int res;
+
     ino_t ino = hlookup(&hfs, path);
     if(ino == (ino_t)-1) {
         return -ENOENT;
     }
 
-    struct stat st;
-    if(hstat(&hfs, ino, &st)) {
-        return -ENOENT;
-    }
+    res = hreadlink(&hfs, ino, buf, size);
 
-    if(!S_ISLNK(st.st_mode)) {
-        return -EINVAL;
-    }
+    if(res < 0)
+	return -EINVAL;
 
-    if(hreadlink(&hfs, ino, buf, size)) {
-        return -EINVAL;
-    }
-
-    return 0;
+    return res;
 }
 
 static void usage(char* argv[])

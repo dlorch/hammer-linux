@@ -679,9 +679,9 @@ hstat(struct hfs *hfs, ino_t ino, struct stat* st)
 	st->st_size = ed->inode.size;
 
 #ifdef __APPLE__
-    hammer_time_to_timespec(ed->inode.atime, &st->st_atimespec);
-    hammer_time_to_timespec(ed->inode.ctime, &st->st_ctimespec);
-    hammer_time_to_timespec(ed->inode.mtime, &st->st_mtimespec);
+	hammer_time_to_timespec(ed->inode.atime, &st->st_atimespec);
+	hammer_time_to_timespec(ed->inode.ctime, &st->st_ctimespec);
+	hammer_time_to_timespec(ed->inode.mtime, &st->st_mtimespec);
 #endif
 
 	return (0);
@@ -805,18 +805,45 @@ hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size)
 {
  	struct hammer_base_elm key;
 	size_t namelen;
+	hammer_btree_leaf_elm_t e;
+	hammer_data_ondisk_t ed;
 
 #if DEBUG > 2
 	printf("%s(%llx)\n", __FUNCTION__, (long long)ino);
 #endif
-
+	// case 1: softlink name in inode
 	bzero(&key, sizeof(key));
+        key.obj_id = ino;
+        key.localization = HAMMER_LOCALIZE_INODE;
+        key.rec_type = HAMMER_RECTYPE_INODE;
+
+        e = hfind(hfs, &key, &key); 
+        if (e == NULL) {
+#ifndef BOOT2
+                errno = ENOENT;
+#endif
+                return -1;
+        }
+
+        ed = hread(hfs, e->data_offset);
+        if (ed == NULL)
+                return (-1);
+
+	if(ed->inode.size <= HAMMER_INODE_BASESYMLEN)
+	{
+		namelen = min(size, ed->inode.size);
+		memcpy(buf, ed->inode.ext.symlink, namelen);
+        	buf[namelen] = '\0';
+		return (0);
+	}
+
+	// case 2: softlink name in data block
 	key.obj_id = ino;
 	key.localization = HAMMER_LOCALIZE_MISC;
 	key.rec_type = HAMMER_RECTYPE_FIX;
 	key.key = HAMMER_FIXKEY_SYMLINK;
 
-	hammer_btree_leaf_elm_t e = hfind(hfs, &key, &key);
+	e = hfind(hfs, &key, &key);
 	if (e == NULL) {
 #ifndef BOOT2
 		errno = ENOENT;
@@ -824,7 +851,7 @@ hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size)
 		return -1;
 	}
 
-	hammer_data_ondisk_t ed = hread(hfs, e->data_offset);
+	ed = hread(hfs, e->data_offset);
 	if (ed == NULL)
 		return (-1);
 
