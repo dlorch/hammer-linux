@@ -804,6 +804,7 @@ int
 hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size)
 {
  	struct hammer_base_elm key;
+	size_t namelen;
 
 #if DEBUG > 2
 	printf("%s(%llx)\n", __FUNCTION__, (long long)ino);
@@ -813,7 +814,7 @@ hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size)
 	key.obj_id = ino;
 	key.localization = HAMMER_LOCALIZE_MISC;
 	key.rec_type = HAMMER_RECTYPE_FIX;
-    key.key = HAMMER_FIXKEY_SYMLINK;
+	key.key = HAMMER_FIXKEY_SYMLINK;
 
 	hammer_btree_leaf_elm_t e = hfind(hfs, &key, &key);
 	if (e == NULL) {
@@ -827,8 +828,9 @@ hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size)
 	if (ed == NULL)
 		return (-1);
 
-    memcpy(buf, ed->symlink.name, size);
-    buf[e->data_len - HAMMER_SYMLINK_NAME_OFF] = '\0';
+	namelen = min(size, e->data_len - HAMMER_SYMLINK_NAME_OFF);
+	memcpy(buf, ed->symlink.name, namelen);
+	buf[namelen] = '\0';
 
 	return (0);
 }
