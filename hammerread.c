@@ -800,6 +800,39 @@ fsread(ino_t ino, void *buf, size_t len)
 }
 #endif
 
+int
+hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size)
+{
+ 	struct hammer_base_elm key;
+
+#if DEBUG > 2
+	printf("%s(%llx)\n", __FUNCTION__, (long long)ino);
+#endif
+
+	bzero(&key, sizeof(key));
+	key.obj_id = ino;
+	key.localization = HAMMER_LOCALIZE_MISC;
+	key.rec_type = HAMMER_RECTYPE_FIX;
+    key.key = HAMMER_FIXKEY_SYMLINK;
+
+	hammer_btree_leaf_elm_t e = hfind(hfs, &key, &key);
+	if (e == NULL) {
+#ifndef BOOT2
+		errno = ENOENT;
+#endif
+		return -1;
+	}
+
+	hammer_data_ondisk_t ed = hread(hfs, e->data_offset);
+	if (ed == NULL)
+		return (-1);
+
+    memcpy(buf, ed->symlink.name, size);
+    buf[e->data_len - HAMMER_SYMLINK_NAME_OFF] = '\0';
+
+	return (0);
+}
+
 #ifndef BOOT2
 int
 hinit(struct hfs *hfs)

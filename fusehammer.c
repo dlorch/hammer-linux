@@ -109,10 +109,33 @@ static int hammer_read(const char *path, char *buf, size_t size, off_t offset,
     return size;
 }
 
+static int hammer_readlink(const char *path, char *buf, size_t size)
+{
+    ino_t ino = hlookup(&hfs, path);
+    if(ino == (ino_t)-1) {
+        return -ENOENT;
+    }
+
+    struct stat st;
+    if(hstat(&hfs, ino, &st)) {
+        return -ENOENT;
+    }
+
+    if(!S_ISLNK(st.st_mode)) {
+        return -EINVAL;
+    }
+
+    if(hreadlink(&hfs, ino, buf, size)) {
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
 static void usage(char* argv[])
 {
-   printf("HAMMER filesystem for FUSE (readonly)\n");
-   printf("Usage: %s <dev> <mount_point> [<FUSE library options>]\n", argv[0]);
+    printf("HAMMER filesystem for FUSE (readonly)\n");
+    printf("Usage: %s <dev> <mount_point> [<FUSE library options>]\n", argv[0]);
 }
 
 static struct fuse_operations hammer_oper = {
@@ -120,6 +143,7 @@ static struct fuse_operations hammer_oper = {
     .readdir	= hammer_readdir,
     .open	= hammer_open,
     .read	= hammer_read,
+    .readlink = hammer_readlink,
 };
 
 int main(int argc, char *argv[])

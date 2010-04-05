@@ -36,6 +36,7 @@ ino_t hlookup(struct hfs *hfs, const char *path);
 int hreaddir(struct hfs *, ino_t, int64_t *, struct dirent *);
 ssize_t hreadf(struct hfs *, ino_t, int64_t, int64_t, char *);
 void hclose(struct hfs *hfs);
+int hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size);
 void hammer_time_to_timespec(u_int64_t xtime, struct timespec *ts);
 
 #endif /* _HAMMERREAD_H_ */
