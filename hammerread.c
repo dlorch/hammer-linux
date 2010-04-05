@@ -807,6 +807,8 @@ hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size)
 	size_t namelen;
 	hammer_btree_leaf_elm_t e;
 	hammer_data_ondisk_t ed;
+	char tmp[32];
+	u_int32_t localization;
 
 #if DEBUG > 2
 	printf("%s(%llx)\n", __FUNCTION__, (long long)ino);
@@ -831,6 +833,22 @@ hreadlink(struct hfs *hfs, ino_t ino, char *buf, size_t size)
 
 	if(ed->inode.size <= HAMMER_INODE_BASESYMLEN)
 	{
+	    	// expand special PFS softlinks
+	    	if(ed->inode.size == 10 &&
+		   strncmp(ed->inode.ext.symlink, "@@PFS", 5) == 0)
+		{
+		    	bcopy(ed->inode.ext.symlink + 5, tmp, 5);
+			tmp[5] = 0;
+			localization = strtoul(tmp, NULL, 10);
+
+			snprintf(buf, size,
+				 "@@0x%016llx:%05d",
+				 HAMMER_MAX_TID,
+				 localization);
+
+			return(0);
+		}
+
 		namelen = min(size, ed->inode.size);
 		memcpy(buf, ed->inode.ext.symlink, namelen);
         	buf[namelen] = '\0';
