@@ -25,6 +25,22 @@ MD5 (5M) = 77c4539c40ad3717e934d320607a9fee
 MD5 (sparse) = e348afb9e5647c5b1468025340c2afd6
 MD5 (test) = f41121a903eafadf258962abc57c8644
 
+Historical Access
+-----------------
+
+$ hammer history test
+test	000000010061aac0 clean {
+    00000001007a1520 23-Mar-2009 20:04:11
+    00000001007a1580 23-Mar-2009 20:04:43
+}
+
+$ cat test@@0x00000001007a1520
+Hello
+
+$ cat test@@0x00000001007a1580
+Hello
+World
+
 Listing
 -------
 
