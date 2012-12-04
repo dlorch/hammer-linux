@@ -20,6 +20,12 @@
 	  border: 1px solid gray;
 	  background-color: #ffffff;
     }
+    #oh-noes-discontinued {
+		  margin-top: 30px;
+		  background-color: #ffe6d2;
+		  border: 5px solid #ff7e00;
+		  padding: 0px 0px 0px 15px;
+    } 
 		h1 { font-size: 3.8em; margin-top: 0; margin-bottom: 3px; }
 		h1 .small { font-size: 0.6em; }
 		h1 a { text-decoration: none }
@@ -38,7 +44,18 @@
   <a href="http://github.com/dlorch/hammer-linux"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
 
   <div id="container">
-	
+	             
+	  <div id="oh-noes-discontinued">
+	    <h3>Oh Noes!</h3>
+	    
+	    <p>I will not maintain the Linux VFS port anymore. Feel free to fork and
+	      improve it.</p>
+	    
+	    <p>You'll find me working on <a href="http://github.com/dlorch/hammer-fuse">HAMMER FUSE Port</a> instead.</p>
+	    
+	    <p>-- Daniel, December 2012</p>
+	  </div>
+    
     <h1><span class="small">Porting the HAMMER File System to Linux</span></h1>
 
     <div align="center"><img src="hammerzeit.jpg" width="400" /></div>
@@ -56,15 +73,15 @@
 	  use this code on a live machine.</p>
 	
 	<p>Two interesting by-products were created: A port of the self-contained
-	  <a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-ported-to-linux.html"><tt>hammerread.c</tt></a>
-	  to Linux, and a <a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-fuse-read-hammer-filesystem.html">Linux FUSE module</a>
+	  <u><tt>hammerread.c</tt></u>
+	  to Linux, and a <u>Linux FUSE module</u>
 	  based on the same code. Both tools are available from
 	  the <a href="#download">downloads section</a>.</p>
 	
     <h2>Documentation</h2>
 
 	<ul>
-		<li><a href="http://hammerfs-ftw.blogspot.com/">Blog</a> - the project blog</li>
+		<li><a href="files/hammerfs-ftw-archived.html">Blog [archived]</a> - the project blog</li>
 		<li><a href="files/hammer-lorch-presentation.pdf">Presentation</a> - the project presentation</li>
 		<li><a href="files/hammer-lorch.pdf">Report</a> - the project report</li>
 	</ul>
@@ -90,7 +107,7 @@ $ make &amp;&amp; insmod hammer.ko
      <h3>Hammerread Command-line Tool</h3>
 
      <p>This is a port of the hammerread.c command line tool to Linux and OS X
-	   [<a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-ported-to-linux.html">Usage</a>].
+	   [<a href="files/hammerfs-ftw-archived.html#8799773384249395638">Usage</a>].
 	 </p>
 	
 	 <p>Download
@@ -108,7 +125,7 @@ usage: hammerread &lt;dev&gt;
 
     <p>Requires <a href="http://fuse.sourceforge.net/">Linux FUSE</a> or
 	  <a href="http://code.google.com/p/macfuse/">MacFUSE</a>
-	  [<a href="http://hammerfs-ftw.blogspot.com/2009/04/hammerreadc-fuse-read-hammer-filesystem.html">Usage</a>].</p>
+	  [<a href="files/hammerfs-ftw-archived.html#3606420843964542948">Usage</a>].</p>
 	
 	<p>Download
 		<a href="http://github.com/dlorch/hammer-linux/zipball/fuse-hammer">zip</a> /
